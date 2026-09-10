@@ -25,7 +25,7 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = 'Confirm',
+  confirmLabel = 'Confirmer',
   destructive = true,
   onConfirm,
 }: ConfirmDialogProps) {
@@ -50,10 +50,10 @@ export function ConfirmDialog({
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-            Cancel
+            Annuler
           </Button>
           <Button variant={destructive ? 'destructive' : 'default'} onClick={handleConfirm} disabled={isSubmitting}>
-            {isSubmitting ? 'Please wait…' : confirmLabel}
+            {isSubmitting ? 'Veuillez patienter…' : confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

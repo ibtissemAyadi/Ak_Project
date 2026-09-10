@@ -38,16 +38,16 @@ export function NotificationsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Notifications"
-        description="Stay on top of activity across clients, projects, invoices and payments."
+        description="Restez informé de l'activité sur vos clients, projets, factures et paiements."
         actions={
           <>
             <Button variant="outline" className="gap-2" onClick={markAllAsRead}>
               <CheckCheck className="h-4 w-4" />
-              Mark all read
+              Tout marquer comme lu
             </Button>
             <Button variant="outline" className="gap-2" onClick={() => navigate('/notifications/settings')}>
               <Settings2 className="h-4 w-4" />
-              Settings
+              Paramètres
             </Button>
           </>
         }
@@ -55,24 +55,24 @@ export function NotificationsPage() {
 
       <div className="flex flex-wrap items-center gap-2">
         <FilterSelect
-          label="Category"
+          label="Catégorie"
           value={categoryFilter}
           onChange={setCategoryFilter}
           options={Object.entries(NOTIFICATION_CATEGORY_META).map(([value, meta]) => ({ value, label: meta.label }))}
         />
         <FilterSelect
-          label="Status"
+          label="Statut"
           value={readFilter}
           onChange={setReadFilter}
           options={[
-            { value: 'unread', label: 'Unread' },
-            { value: 'read', label: 'Read' },
+            { value: 'unread', label: 'Non lu' },
+            { value: 'read', label: 'Lu' },
           ]}
         />
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState title="No notifications" description="You're all caught up." />
+        <EmptyState title="Aucune notification" description="Vous êtes à jour." />
       ) : (
         <div className="space-y-2">
           {filtered.map((n) => (

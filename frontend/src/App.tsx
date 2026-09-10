@@ -5,6 +5,8 @@ import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppLayout } from '@/components/layout/app-layout'
 import { ProtectedRoute } from '@/features/auth/components/protected-route'
+import { RequireAdmin } from '@/features/auth/components/require-admin'
+import { RequirePermission } from '@/features/auth/components/require-permission'
 import { LoginPage } from '@/features/auth/pages/login-page'
 import { ForgotPasswordPage } from '@/features/auth/pages/forgot-password-page'
 import { DashboardPage } from '@/features/dashboard/pages/dashboard-page'
@@ -16,11 +18,13 @@ import { ClientFormPage } from '@/features/crm/pages/client-form-page'
 
 import { QuotationsListPage } from '@/features/quotations/pages/quotations-list-page'
 import { QuotationDetailPage } from '@/features/quotations/pages/quotation-detail-page'
-import { QuotationFormPage } from '@/features/quotations/pages/quotation-form-page'
 import { QuotationsKanbanPage } from '@/features/quotations/pages/quotations-kanban-page'
 
-import { ProjectsListPage } from '@/features/projects/pages/projects-list-page'
-import { ProjectDetailPage } from '@/features/projects/pages/project-detail-page'
+import { AffairesPage } from '@/features/affaires/pages/affaires-page'
+import { AffaireDetailPage } from '@/features/affaires/pages/affaire-detail-page'
+
+import { FacturesListPage } from '@/features/factures/pages/factures-list-page'
+import { FactureDetailPage } from '@/features/factures/pages/facture-detail-page'
 
 import { InvoicesListPage } from '@/features/invoices/pages/invoices-list-page'
 import { InvoiceDetailPage } from '@/features/invoices/pages/invoice-detail-page'
@@ -70,18 +74,61 @@ export default function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
 
             <Route path="/crm/clients" element={<ClientsListPage />} />
-            <Route path="/crm/clients/new" element={<ClientFormPage />} />
+            <Route
+              path="/crm/clients/new"
+              element={
+                <RequirePermission module="clients" action="creation" redirectTo="/crm/clients">
+                  <ClientFormPage />
+                </RequirePermission>
+              }
+            />
             <Route path="/crm/clients/:clientId" element={<ClientDetailPage />} />
-            <Route path="/crm/clients/:clientId/edit" element={<ClientFormPage />} />
+            <Route
+              path="/crm/clients/:clientId/edit"
+              element={
+                <RequirePermission module="clients" action="modification" redirectTo="/crm/clients">
+                  <ClientFormPage />
+                </RequirePermission>
+              }
+            />
 
-            <Route path="/quotations" element={<QuotationsListPage />} />
-            <Route path="/quotations/kanban" element={<QuotationsKanbanPage />} />
-            <Route path="/quotations/new" element={<QuotationFormPage />} />
-            <Route path="/quotations/:quotationId" element={<QuotationDetailPage />} />
-            <Route path="/quotations/:quotationId/edit" element={<QuotationFormPage />} />
+            <Route path="/devis" element={<QuotationsListPage />} />
+            <Route path="/devis/kanban" element={<QuotationsKanbanPage />} />
+            <Route path="/devis/:devisId" element={<QuotationDetailPage />} />
 
-            <Route path="/projects" element={<ProjectsListPage />} />
-            <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
+            <Route
+              path="/affaires"
+              element={
+                <RequirePermission module="affaires" action="lecture" redirectTo="/dashboard">
+                  <AffairesPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="/affaires/:affaireId"
+              element={
+                <RequirePermission module="affaires" action="lecture" redirectTo="/dashboard">
+                  <AffaireDetailPage />
+                </RequirePermission>
+              }
+            />
+
+            <Route
+              path="/factures"
+              element={
+                <RequirePermission module="factures" action="lecture" redirectTo="/dashboard">
+                  <FacturesListPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="/factures/:factureId"
+              element={
+                <RequirePermission module="factures" action="lecture" redirectTo="/dashboard">
+                  <FactureDetailPage />
+                </RequirePermission>
+              }
+            />
 
             <Route path="/invoices" element={<InvoicesListPage />} />
             <Route path="/invoices/new" element={<InvoiceFormPage />} />
@@ -96,9 +143,9 @@ export default function App() {
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/notifications/settings" element={<NotificationSettingsPage />} />
 
-            <Route path="/admin/users" element={<UsersPage />} />
-            <Route path="/admin/roles" element={<RolesPage />} />
-            <Route path="/admin/permissions" element={<PermissionsPage />} />
+            <Route path="/admin/users" element={<RequireAdmin><UsersPage /></RequireAdmin>} />
+            <Route path="/admin/roles" element={<RequireAdmin><RolesPage /></RequireAdmin>} />
+            <Route path="/admin/permissions" element={<RequireAdmin><PermissionsPage /></RequireAdmin>} />
             <Route path="/admin/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

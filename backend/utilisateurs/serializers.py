@@ -5,9 +5,14 @@ from .models import Role, Utilisateur
 
 
 class RoleSerializer(serializers.ModelSerializer):
+    user_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Role
-        fields = ['id_role', 'libelle', 'permissions']
+        fields = ['id_role', 'libelle', 'permissions', 'user_count']
+
+    def get_user_count(self, role):
+        return role.utilisateurs.count()
 
 
 class UtilisateurSerializer(serializers.ModelSerializer):
@@ -36,6 +41,21 @@ class UtilisateurCreateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         # Après création, on répond avec la représentation complète (rôle inclus).
+        return UtilisateurSerializer(instance).data
+
+
+class UtilisateurUpdateSerializer(serializers.ModelSerializer):
+    """Utilisée pour PUT/PATCH sur un utilisateur existant : contrairement à
+    UtilisateurSerializer (role en lecture seule, pour l'affichage), ici le
+    rôle est modifiable — c'est ce qui permet à l'Administrateur de changer
+    l'accès d'un utilisateur (role_id) ou son statut (Actif/Suspendu/...)."""
+
+    class Meta:
+        model = Utilisateur
+        fields = ['nom', 'prenom', 'email', 'role', 'cout_horaire', 'statut']
+        extra_kwargs = {field: {'required': False} for field in fields}
+
+    def to_representation(self, instance):
         return UtilisateurSerializer(instance).data
 
 

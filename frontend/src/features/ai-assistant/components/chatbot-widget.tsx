@@ -63,7 +63,7 @@ export function ChatbotWidget() {
         <Button
           size="icon"
           className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full shadow-lg"
-          aria-label="Open AI Assistant"
+          aria-label="Ouvrir l'assistant IA"
         >
           {open ? <X className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
         </Button>
@@ -79,8 +79,8 @@ export function ChatbotWidget() {
               <Bot className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-sm font-semibold leading-none">AK Assistant</p>
-              <p className="text-[11px] text-muted-foreground">Ask about clients, projects, invoices…</p>
+              <p className="text-sm font-semibold leading-none">Assistant AK</p>
+              <p className="text-[11px] text-muted-foreground">Posez une question sur les clients, projets, factures…</p>
             </div>
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowHistory((s) => !s)}>
@@ -92,9 +92,9 @@ export function ChatbotWidget() {
           {showHistory ? (
             <div className="absolute inset-0 z-10 flex flex-col bg-popover">
               <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Conversation history</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Historique des conversations</p>
                 <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={startNewConversation}>
-                  New chat
+                  Nouvelle conversation
                 </Button>
               </div>
               <ScrollArea className="flex-1">
@@ -123,12 +123,12 @@ export function ChatbotWidget() {
           <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-thin px-4 py-3">
             {!activeConversation || activeConversation.messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-accent-foreground">
                   <MessageCircle className="h-6 w-6" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">How can I help today?</p>
-                  <p className="text-xs text-muted-foreground">Try one of the suggested actions below.</p>
+                  <p className="text-sm font-medium text-foreground">Comment puis-je vous aider aujourd'hui ?</p>
+                  <p className="text-xs text-muted-foreground">Essayez l'une des suggestions ci-dessous.</p>
                 </div>
                 <div className="grid w-full gap-2">
                   {SUGGESTED_PROMPTS.map((prompt) => (
@@ -170,9 +170,9 @@ export function ChatbotWidget() {
                       <Bot className="h-3.5 w-3.5" />
                     </div>
                     <div className="flex items-center gap-1 rounded-lg bg-muted px-3 py-2.5">
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]" />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.15s]" />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground" />
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted-foreground [animation-delay:-0.3s]" />
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted-foreground [animation-delay:-0.15s]" />
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted-foreground" />
                     </div>
                   </div>
                 ) : null}
@@ -197,7 +197,7 @@ export function ChatbotWidget() {
                 handleSend()
               }
             }}
-            placeholder="Ask the AI assistant…"
+            placeholder="Posez une question à l'assistant IA…"
             className="min-h-9 flex-1 resize-none py-2"
             rows={1}
           />

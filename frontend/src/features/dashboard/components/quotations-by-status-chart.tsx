@@ -1,15 +1,16 @@
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { QUOTATION_STATUS_META } from '@/lib/constants'
+import { DEVIS_STATUT_META } from '@/lib/constants'
 
 const COLORS: Record<string, string> = {
-  draft: 'hsl(var(--muted-foreground))',
-  sent: 'hsl(var(--chart-2))',
-  under_review: 'hsl(var(--chart-4))',
-  accepted: 'hsl(var(--chart-3))',
-  rejected: 'hsl(var(--destructive))',
-  expired: 'hsl(var(--chart-5))',
+  Brouillon: 'hsl(var(--muted-foreground))',
+  En_preparation: 'hsl(var(--chart-2))',
+  A_valider: 'hsl(var(--chart-4))',
+  Envoye: 'hsl(var(--chart-1))',
+  Accepte: 'hsl(var(--chart-3))',
+  Refuse: 'hsl(var(--destructive))',
+  Annule: 'hsl(var(--chart-5))',
 }
 
 interface Props {
@@ -19,12 +20,12 @@ interface Props {
 export function QuotationsByStatusChart({ data }: Props) {
   const chartData = data
     .filter((d) => d.count > 0)
-    .map((d) => ({ name: QUOTATION_STATUS_META[d.status]?.label ?? d.status, value: d.count, status: d.status }))
+    .map((d) => ({ name: DEVIS_STATUT_META[d.status]?.label ?? d.status, value: d.count, status: d.status }))
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Quotations by Status</CardTitle>
+        <CardTitle>Devis par statut</CardTitle>
       </CardHeader>
       <CardContent className="h-72">
         <ResponsiveContainer width="100%" height="100%">

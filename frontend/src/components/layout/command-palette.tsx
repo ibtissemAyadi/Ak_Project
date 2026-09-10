@@ -43,9 +43,9 @@ export function CommandPalette() {
 
   return (
     <CommandDialog open={commandPaletteOpen} onOpenChange={setCommandPaletteOpen}>
-      <CommandInput placeholder="Search clients, quotations, projects, invoices…" />
+      <CommandInput placeholder="Rechercher clients, devis, projets, factures…" />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandEmpty>Aucun résultat.</CommandEmpty>
         <CommandGroup heading="Clients">
           {clients.map((c) => (
             <CommandItem key={c.id} value={`client ${c.name}`} onSelect={() => go(`/crm/clients/${c.id}`)}>
@@ -54,15 +54,15 @@ export function CommandPalette() {
             </CommandItem>
           ))}
         </CommandGroup>
-        <CommandGroup heading="Quotations">
+        <CommandGroup heading="Devis">
           {quotations.map((q) => (
-            <CommandItem key={q.id} value={`quotation ${q.reference} ${q.title}`} onSelect={() => go(`/quotations/${q.id}`)}>
+            <CommandItem key={q.id} value={`devis ${q.reference} ${q.title}`} onSelect={() => go(`/devis/${q.id}`)}>
               <FileText className="h-4 w-4 text-muted-foreground" />
               {q.reference} — {q.title}
             </CommandItem>
           ))}
         </CommandGroup>
-        <CommandGroup heading="Projects">
+        <CommandGroup heading="Projets">
           {projects.map((p) => (
             <CommandItem key={p.id} value={`project ${p.reference} ${p.name}`} onSelect={() => go(`/projects/${p.id}`)}>
               <FolderKanban className="h-4 w-4 text-muted-foreground" />
@@ -70,7 +70,7 @@ export function CommandPalette() {
             </CommandItem>
           ))}
         </CommandGroup>
-        <CommandGroup heading="Invoices">
+        <CommandGroup heading="Factures">
           {invoices.map((i) => (
             <CommandItem key={i.id} value={`invoice ${i.reference} ${i.clientName}`} onSelect={() => go(`/invoices/${i.id}`)}>
               <Receipt className="h-4 w-4 text-muted-foreground" />

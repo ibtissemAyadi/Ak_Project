@@ -4,10 +4,15 @@ from rest_framework.permissions import BasePermission
 class HasModulePermission(BasePermission):
     """Vérifie la matrice de permissions du rôle de l'utilisateur connecté.
 
-    Chaque vue déclare :
-      - permission_module : le module concerné (ex. 'utilisateurs')
-      - permission_action  : (optionnel) l'action explicite (ex. 'validation'),
-        sinon elle est déduite automatiquement du verbe HTTP.
+    Le module concerné est déterminé, dans l'ordre :
+      1. view.permission_module (vues "réelles", ex. UtilisateurListCreateView)
+      2. view.kwargs['module']  (endpoint générique /api/permissions/<module>/)
+
+    L'action est déterminée, dans l'ordre :
+      1. ?action=... en query param (permet de tester "validation", qui ne
+         correspond à aucun verbe HTTP standard)
+      2. view.permission_action (surcharge explicite côté vue)
+      3. déduite automatiquement du verbe HTTP (GET→lecture, POST→creation...)
 
     C'est ici — et uniquement ici, côté serveur — que la décision d'autoriser
     ou non une requête est prise. Le frontend n'a aucune influence sur ce
@@ -30,8 +35,12 @@ class HasModulePermission(BasePermission):
         if not user or not user.is_authenticated:
             return False
 
-        module = getattr(view, 'permission_module', None)
-        action = getattr(view, 'permission_action', None) or self.ACTION_MAP.get(request.method)
+        module = getattr(view, 'permission_module', None) or view.kwargs.get('module')
+        action = (
+            request.query_params.get('action')
+            or getattr(view, 'permission_action', None)
+            or self.ACTION_MAP.get(request.method)
+        )
         if not module or not action:
             return False
 

@@ -44,6 +44,12 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'utilisateurs',
+    'crm',
+    'devis',
+    'affaires',
+    'factures',
+    'activites',
+    'documents',
 ]
 
 MIDDLEWARE = [
@@ -111,6 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",   # l'adresse par défaut de React (Vite)
+    "http://localhost:5174",   # port de secours si 5173 est déjà utilisé
 ]
 
 
@@ -151,3 +158,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Fichiers uploadés (pièces jointes d'affaire — bons de commande, etc.).
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'

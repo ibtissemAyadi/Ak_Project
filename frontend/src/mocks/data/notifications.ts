@@ -20,7 +20,7 @@ export const MOCK_NOTIFICATIONS: AppNotification[] = [
     message: 'NovaGrid Energy accepted QUO-2004 - Electrical Distribution Upgrade Design.',
     read: false,
     createdAt: daysFromNow(-0.3),
-    link: '/quotations/quo-5',
+    link: '/devis/quo-5',
   },
   {
     id: 'ntf-3',
@@ -89,7 +89,7 @@ export const MOCK_NOTIFICATIONS: AppNotification[] = [
     message: 'QUO-2011 for Zenith Data Centers expires in 3 days.',
     read: false,
     createdAt: daysFromNow(-3.2),
-    link: '/quotations/quo-11',
+    link: '/devis/quo-11',
   },
   {
     id: 'ntf-10',

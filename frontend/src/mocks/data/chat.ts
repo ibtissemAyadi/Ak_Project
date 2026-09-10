@@ -2,10 +2,10 @@ import type { ChatConversation } from '@/types'
 import { daysFromNow } from '@/mocks/generators'
 
 export const SUGGESTED_PROMPTS = [
-  'Summarize overdue invoices this month',
-  'Which projects are at risk of missing their deadline?',
-  'Draft a follow-up email for a pending quotation',
-  'Show me clients with no activity in 60 days',
+  'Résumer les factures en retard ce mois-ci',
+  'Quels projets risquent de manquer leur échéance ?',
+  'Rédiger un email de relance pour un devis en attente',
+  "Montrer les clients sans activité depuis 60 jours",
 ]
 
 export const MOCK_CONVERSATIONS: ChatConversation[] = [
@@ -53,17 +53,17 @@ export const MOCK_CONVERSATIONS: ChatConversation[] = [
 
 export function buildAssistantReply(prompt: string): string {
   const normalized = prompt.toLowerCase()
-  if (normalized.includes('overdue') || normalized.includes('invoice')) {
-    return 'Here is a quick read on your receivables: overdue invoices are concentrated in 2-3 accounts. I can prepare reminder drafts or export a list if that helps.'
+  if (normalized.includes('overdue') || normalized.includes('invoice') || normalized.includes('retard') || normalized.includes('facture')) {
+    return "Voici un aperçu rapide de vos créances : les factures en retard sont concentrées sur 2-3 comptes. Je peux préparer des relances ou exporter une liste si cela peut aider."
   }
-  if (normalized.includes('project') || normalized.includes('deadline')) {
-    return 'Looking at progress vs. planned timeline, a couple of projects are trending behind schedule. I would recommend a status check-in with their project managers this week.'
+  if (normalized.includes('project') || normalized.includes('deadline') || normalized.includes('projet') || normalized.includes('échéance')) {
+    return "En comparant l'avancement au planning prévu, quelques projets accusent du retard. Je recommande un point de statut avec leurs chefs de projet cette semaine."
   }
-  if (normalized.includes('quotation') || normalized.includes('email')) {
-    return 'Sure — here is a draft: "Hello, I wanted to follow up on the quotation we shared and see if you had any questions before we move forward. Happy to jump on a call this week."'
+  if (normalized.includes('quotation') || normalized.includes('email') || normalized.includes('devis') || normalized.includes('relance')) {
+    return 'Bien sûr — voici un brouillon : « Bonjour, je me permets de revenir vers vous concernant le devis transmis afin de savoir si vous aviez des questions avant de poursuivre. Disponible pour un appel cette semaine. »'
   }
-  if (normalized.includes('client')) {
-    return 'A handful of accounts have had no logged activity in the last 60 days. I can flag them to the relevant account managers for a re-engagement outreach.'
+  if (normalized.includes('client') || normalized.includes('activité')) {
+    return "Quelques comptes n'ont enregistré aucune activité depuis 60 jours. Je peux les signaler aux chargés d'affaires concernés pour une relance."
   }
-  return "I've noted that. I can pull data from CRM, Quotations, Projects, Invoices and Payments to help answer questions like this once connected to live data."
+  return "C'est noté. Je pourrai m'appuyer sur les données du CRM, des Devis, des Projets, des Factures et des Paiements pour répondre à ce type de question une fois connecté aux données réelles."
 }

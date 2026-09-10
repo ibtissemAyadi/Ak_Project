@@ -24,7 +24,7 @@ export function NotificationCenter() {
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative text-muted-foreground">
-          <Bell className="h-4.5 w-4.5" />
+          <Bell className="h-5 w-5" />
           {unreadCount > 0 ? (
             <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
               {unreadCount > 9 ? '9+' : unreadCount}
@@ -39,13 +39,13 @@ export function NotificationCenter() {
           {unreadCount > 0 ? (
             <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={markAllAsRead}>
               <CheckCheck className="h-3.5 w-3.5" />
-              Mark all read
+              Tout marquer comme lu
             </Button>
           ) : null}
         </div>
 
         {recent.length === 0 ? (
-          <EmptyState title="You're all caught up" description="No new notifications." className="border-0 py-8" />
+          <EmptyState title="Vous êtes à jour" description="Aucune nouvelle notification." className="border-0 py-8" />
         ) : (
           <ScrollArea className="max-h-96">
             <div className="divide-y divide-border">
@@ -70,7 +70,7 @@ export function NotificationCenter() {
 
         <div className="border-t border-border p-2">
           <Button variant="ghost" size="sm" className="w-full justify-center text-xs" asChild>
-            <Link to="/notifications">View all notifications</Link>
+            <Link to="/notifications">Voir toutes les notifications</Link>
           </Button>
         </div>
       </PopoverContent>

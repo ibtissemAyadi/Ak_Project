@@ -3,41 +3,13 @@ import { persist } from 'zustand/middleware'
 
 import type { AuthUser } from '@/types'
 import { API_BASE_URL } from '@/lib/constants'
+import { mapAuthUser } from '@/lib/map-auth-user'
+import type { RawUtilisateur } from '@/lib/map-auth-user'
 
 interface LoginResponse {
   access: string
   refresh: string
-  user: {
-    id_utilisateur: string
-    nom: string
-    prenom: string
-    email: string
-    role: {
-      id_role: string
-      libelle: string
-      permissions: Record<string, Record<string, boolean>>
-    }
-    statut: 'Actif' | 'Suspendu' | 'Desactive'
-    cout_horaire: string | number
-    date_creation: string
-  }
-}
-
-function mapUser(raw: LoginResponse['user']): AuthUser {
-  return {
-    id: raw.id_utilisateur,
-    nom: raw.nom,
-    prenom: raw.prenom,
-    email: raw.email,
-    role: {
-      id: raw.role.id_role,
-      libelle: raw.role.libelle,
-      permissions: raw.role.permissions,
-    },
-    statut: raw.statut,
-    coutHoraire: Number(raw.cout_horaire),
-    dateCreation: raw.date_creation,
-  }
+  user: RawUtilisateur
 }
 
 interface AuthState {
@@ -82,7 +54,7 @@ export const useAuthStore = create<AuthState>()(
 
         const loginData = data as LoginResponse
         set({
-          user: mapUser(loginData.user),
+          user: mapAuthUser(loginData.user),
           accessToken: loginData.access,
           refreshToken: loginData.refresh,
           isAuthenticated: true,

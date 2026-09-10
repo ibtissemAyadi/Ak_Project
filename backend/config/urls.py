@@ -14,15 +14,29 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from utilisateurs.views import EmailTokenObtainPairView
+from utilisateurs.views import EmailTokenObtainPairView, ModuleAccessCheckView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/login/', EmailTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/utilisateurs/', include('utilisateurs.urls')),
+    path('api/clients/', include('crm.urls')),
+    path('api/devis/', include('devis.urls')),
+    path('api/affaires/', include('affaires.urls')),
+    path('api/factures/', include('factures.urls')),
+    path('api/activites/', include('activites.urls')),
+    path('api/documents/', include('documents.urls')),
+    path('api/permissions/<str:module>/', ModuleAccessCheckView.as_view(), name='permission-check'),
 ]
+
+# Sert les fichiers uploadés (pièces jointes) en développement — en
+# production, un serveur web dédié (nginx, etc.) s'en charge normalement.
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

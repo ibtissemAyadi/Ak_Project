@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ChevronDown, ChevronsLeft, ChevronsRight, ShieldCheck } from 'lucide-react'
+import { ChevronDown, ChevronsLeft, ChevronsRight } from 'lucide-react'
 
 import { NAV_ITEMS } from '@/config/nav'
 import { cn } from '@/lib/utils'
 import { useUiStore } from '@/store/ui-store'
+import { useAuthStore } from '@/store/auth-store'
+import { hasPermission } from '@/lib/permissions'
 import { COMPANY_NAME } from '@/lib/constants'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -19,8 +21,15 @@ function isActivePath(current: string, to: string) {
 
 export function SidebarContent({ collapsed }: { collapsed: boolean }) {
   const location = useLocation()
+  const user = useAuthStore((s) => s.user)
+  const isAdmin = user?.role.libelle === 'Administrateur'
+  const navItems = NAV_ITEMS.filter(
+    (item) =>
+      (!item.adminOnly || isAdmin) &&
+      (!item.requiredPermission || hasPermission(user, item.requiredPermission.module, item.requiredPermission.action)),
+  )
   const [openGroups, setOpenGroups] = useState<string[]>(
-    NAV_ITEMS.filter((i) => i.children?.some((c) => isActivePath(location.pathname, c.to))).map((i) => i.label),
+    navItems.filter((i) => i.children?.some((c) => isActivePath(location.pathname, c.to))).map((i) => i.label),
   )
 
   const toggleGroup = (label: string) => {
@@ -29,16 +38,14 @@ export function SidebarContent({ collapsed }: { collapsed: boolean }) {
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className={cn('flex h-14 items-center gap-2 border-b border-sidebar-border px-4', collapsed && 'justify-center px-0')}>
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-          <ShieldCheck className="h-4.5 w-4.5" />
-        </div>
-        {!collapsed ? <span className="truncate text-sm font-semibold">{COMPANY_NAME}</span> : null}
+      <div className={cn('flex h-14 items-center gap-2.5 border-b border-sidebar-border px-4', collapsed && 'justify-center px-0')}>
+        <img src="/ak_logo.png" alt={COMPANY_NAME} className="h-9 w-9 shrink-0 object-contain" />
+        {!collapsed ? <span className="truncate text-sm font-semibold leading-tight">{COMPANY_NAME}</span> : null}
       </div>
 
       <ScrollArea className="flex-1">
-        <nav className="flex flex-col gap-0.5 p-2">
-          {NAV_ITEMS.map((item) => {
+        <nav className="flex flex-col gap-0.5 p-2 pt-4">
+          {navItems.map((item) => {
             const active = isActivePath(location.pathname, item.to)
             const hasChildren = !!item.children?.length
             const isOpen = openGroups.includes(item.label)
@@ -53,12 +60,15 @@ export function SidebarContent({ collapsed }: { collapsed: boolean }) {
                   }
                 }}
                 className={cn(
-                  'group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                  active && 'bg-sidebar-accent text-sidebar-accent-foreground',
+                  'group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                  active && 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm',
                   collapsed && 'justify-center px-0',
                 )}
               >
-                <item.icon className="h-4.5 w-4.5 shrink-0" />
+                {active ? (
+                  <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-sidebar-primary" />
+                ) : null}
+                <item.icon className="h-5 w-5 shrink-0" />
                 {!collapsed ? (
                   <>
                     <span className="flex-1 truncate">{item.label}</span>
@@ -116,7 +126,7 @@ export function Sidebar() {
     <aside
       className={cn(
         'sticky top-0 hidden h-svh shrink-0 border-r border-sidebar-border transition-all duration-200 lg:flex lg:flex-col',
-        sidebarCollapsed ? 'w-16' : 'w-64',
+        sidebarCollapsed ? 'w-16' : 'w-60',
       )}
     >
       <div className="relative flex-1">

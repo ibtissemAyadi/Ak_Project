@@ -31,20 +31,20 @@ import { MOCK_CLIENTS } from '@/mocks/data/clients'
 import { MOCK_PROJECTS } from '@/mocks/data/projects'
 
 const lineSchema = z.object({
-  description: z.string().min(1, 'Required'),
+  description: z.string().min(1, 'Requis'),
   quantity: z.number().min(0.01),
   unitPrice: z.number().min(0),
   taxPct: z.number().min(0).max(100),
 })
 
 const schema = z.object({
-  clientId: z.string().min(1, 'Select a client'),
+  clientId: z.string().min(1, 'Sélectionnez un client'),
   projectId: z.string().optional(),
   issueDate: z.string().min(1),
   dueDate: z.string().min(1),
   currency: z.string().min(1),
   notes: z.string().optional(),
-  lines: z.array(lineSchema).min(1, 'Add at least one line item'),
+  lines: z.array(lineSchema).min(1, 'Ajoutez au moins une ligne'),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -102,22 +102,22 @@ export function InvoiceFormPage() {
         lines: values.lines.map((l, i) => ({ ...l, id: `il-new-${i}` })),
         notes: values.notes,
       })
-      toast.success('Invoice created successfully.')
+      toast.success('Facture créée avec succès.')
       navigate(`/invoices/${created.id}`)
     } catch {
-      toast.error('Something went wrong while creating the invoice.')
+      toast.error('Une erreur est survenue lors de la création de la facture.')
     }
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader title="New Invoice" description="Create an invoice and send it to your client." />
+      <PageHeader title="Nouvelle facture" description="Créez une facture et envoyez-la à votre client." />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Invoice Details</CardTitle>
+              <CardTitle>Détails de la facture</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <FormField
@@ -150,11 +150,11 @@ export function InvoiceFormPage() {
                 name="projectId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Related Project (optional)</FormLabel>
+                    <FormLabel>Projet lié (optionnel)</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="None" />
+                          <SelectValue placeholder="Aucun" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -175,7 +175,7 @@ export function InvoiceFormPage() {
                 name="issueDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Issue Date</FormLabel>
+                    <FormLabel>Date d'émission</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -189,7 +189,7 @@ export function InvoiceFormPage() {
                 name="dueDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Due Date</FormLabel>
+                    <FormLabel>Date d'échéance</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -205,7 +205,7 @@ export function InvoiceFormPage() {
                   <FormItem className="sm:col-span-2 lg:col-span-4">
                     <FormLabel>Notes</FormLabel>
                     <FormControl>
-                      <Textarea rows={2} placeholder="Payment terms, bank details…" {...field} />
+                      <Textarea rows={2} placeholder="Conditions de paiement, coordonnées bancaires…" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -216,10 +216,10 @@ export function InvoiceFormPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>Line Items</CardTitle>
+              <CardTitle>Lignes</CardTitle>
               <Button type="button" size="sm" variant="outline" className="gap-1.5" onClick={() => append(defaultLine())}>
                 <Plus className="h-3.5 w-3.5" />
-                Add Line
+                Ajouter une ligne
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -240,9 +240,9 @@ export function InvoiceFormPage() {
                       placeholder="Description"
                       {...form.register(`lines.${index}.description`)}
                     />
-                    <Input type="number" step="1" min="0" placeholder="Qty" {...form.register(`lines.${index}.quantity`, { valueAsNumber: true })} />
-                    <Input type="number" step="1" min="0" placeholder="Unit Price" {...form.register(`lines.${index}.unitPrice`, { valueAsNumber: true })} />
-                    <Input type="number" step="1" min="0" max="100" placeholder="Tax %" {...form.register(`lines.${index}.taxPct`, { valueAsNumber: true })} />
+                    <Input type="number" step="1" min="0" placeholder="Qté" {...form.register(`lines.${index}.quantity`, { valueAsNumber: true })} />
+                    <Input type="number" step="1" min="0" placeholder="Prix unitaire" {...form.register(`lines.${index}.unitPrice`, { valueAsNumber: true })} />
+                    <Input type="number" step="1" min="0" max="100" placeholder="TVA %" {...form.register(`lines.${index}.taxPct`, { valueAsNumber: true })} />
                     <div className="flex items-center justify-between gap-2 lg:justify-end">
                       <span className="text-xs font-medium tabular-nums text-foreground lg:hidden">
                         {formatCurrency(lineTotal, form.getValues('currency'))}
@@ -264,11 +264,11 @@ export function InvoiceFormPage() {
 
               <div className="ml-auto max-w-xs space-y-1.5 border-t border-border pt-3 text-sm">
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Subtotal</span>
+                  <span>Sous-total</span>
                   <span className="tabular-nums">{formatCurrency(totals.subtotal, form.getValues('currency'))}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Tax</span>
+                  <span>TVA</span>
                   <span className="tabular-nums">{formatCurrency(totals.tax, form.getValues('currency'))}</span>
                 </div>
                 <div className="flex justify-between border-t border-border pt-1.5 text-base font-semibold text-foreground">
@@ -281,10 +281,10 @@ export function InvoiceFormPage() {
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-              Cancel
+              Annuler
             </Button>
             <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? 'Saving…' : 'Create Invoice'}
+              {form.formState.isSubmitting ? 'Enregistrement…' : 'Créer la facture'}
             </Button>
           </div>
         </form>

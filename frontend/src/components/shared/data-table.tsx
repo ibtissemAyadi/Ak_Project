@@ -51,12 +51,12 @@ export function DataTable<TData>({
   isLoading,
   error,
   onRetry,
-  searchPlaceholder = 'Search…',
+  searchPlaceholder = 'Rechercher…',
   searchValue,
   onSearchChange,
   toolbar,
-  emptyTitle = 'No records found',
-  emptyDescription = 'Try adjusting your filters or search terms.',
+  emptyTitle = 'Aucun résultat',
+  emptyDescription = 'Essayez d\'ajuster vos filtres ou votre recherche.',
   emptyActionLabel,
   onEmptyAction,
   onRowClick,
@@ -88,7 +88,7 @@ export function DataTable<TData>({
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-xs">
+        <div className="relative w-full sm:max-w-[380px]">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
@@ -108,7 +108,7 @@ export function DataTable<TData>({
         <EmptyState title={emptyTitle} description={emptyDescription} actionLabel={emptyActionLabel} onAction={onEmptyAction} />
       ) : (
         <>
-          <div className="rounded-lg border border-border">
+          <div className="overflow-hidden rounded-lg border border-border">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -160,7 +160,7 @@ export function DataTable<TData>({
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Rows per page</span>
+              <span>Lignes par page</span>
               <Select
                 value={String(table.getState().pagination.pageSize)}
                 onValueChange={(value) => table.setPageSize(Number(value))}
@@ -180,8 +180,8 @@ export function DataTable<TData>({
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span>
-                Page {table.getState().pagination.pageIndex + 1} of {Math.max(table.getPageCount(), 1)} ·{' '}
-                {table.getFilteredRowModel().rows.length} results
+                Page {table.getState().pagination.pageIndex + 1} sur {Math.max(table.getPageCount(), 1)} ·{' '}
+                {table.getFilteredRowModel().rows.length} résultats
               </span>
               <div className="flex items-center gap-1">
                 <Button

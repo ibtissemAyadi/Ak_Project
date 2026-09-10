@@ -21,7 +21,6 @@ import {
 import { FileDropzone } from '@/components/shared/file-dropzone'
 import { DOCUMENT_CATEGORY_META } from '@/lib/constants'
 import { documentsService } from '@/services/documents-service'
-import { useAuthStore } from '@/store/auth-store'
 import type { DocumentCategory } from '@/types'
 
 interface Props {
@@ -31,7 +30,6 @@ interface Props {
 }
 
 export function UploadDialog({ open, onOpenChange, onUploaded }: Props) {
-  const user = useAuthStore((s) => s.user)
   const [files, setFiles] = useState<File[]>([])
   const [category, setCategory] = useState<DocumentCategory>('technical')
   const [isUploading, setIsUploading] = useState(false)
@@ -41,19 +39,14 @@ export function UploadDialog({ open, onOpenChange, onUploaded }: Props) {
     setIsUploading(true)
     try {
       for (const file of files) {
-        await documentsService.upload({
-          name: file.name,
-          category,
-          sizeKb: Math.max(20, Math.round(file.size / 1024)),
-          ownerName: user ? `${user.prenom} ${user.nom}` : 'You',
-        })
+        await documentsService.upload({ designation: file.name, categorie: category, fichier: file })
       }
-      toast.success(`${files.length} document${files.length > 1 ? 's' : ''} uploaded successfully.`)
+      toast.success(`${files.length} document${files.length > 1 ? 's' : ''} importé${files.length > 1 ? 's' : ''} avec succès.`)
       setFiles([])
       onOpenChange(false)
       onUploaded()
     } catch {
-      toast.error('Upload failed. Please try again.')
+      toast.error('Échec de l\'import. Veuillez réessayer.')
     } finally {
       setIsUploading(false)
     }
@@ -63,8 +56,8 @@ export function UploadDialog({ open, onOpenChange, onUploaded }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Upload documents</DialogTitle>
-          <DialogDescription>Add files to your document library and assign a category.</DialogDescription>
+          <DialogTitle>Importer des documents</DialogTitle>
+          <DialogDescription>Ajoutez des fichiers à votre bibliothèque et assignez une catégorie.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -87,7 +80,7 @@ export function UploadDialog({ open, onOpenChange, onUploaded }: Props) {
           ) : null}
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Category</label>
+            <label className="text-sm font-medium text-foreground">Catégorie</label>
             <Select value={category} onValueChange={(v) => setCategory(v as DocumentCategory)}>
               <SelectTrigger>
                 <SelectValue />
@@ -105,11 +98,11 @@ export function UploadDialog({ open, onOpenChange, onUploaded }: Props) {
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Annuler
           </Button>
           <Button className="gap-2" disabled={files.length === 0 || isUploading} onClick={handleUpload}>
             <Upload className="h-4 w-4" />
-            {isUploading ? 'Uploading…' : 'Upload'}
+            {isUploading ? 'Import…' : 'Importer'}
           </Button>
         </DialogFooter>
       </DialogContent>

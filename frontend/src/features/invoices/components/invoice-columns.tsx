@@ -9,7 +9,7 @@ import { computeInvoiceTotal } from '@/mocks/data/invoices'
 export const invoiceColumns: ColumnDef<Invoice, any>[] = [
   {
     accessorKey: 'reference',
-    header: 'Invoice',
+    header: 'Facture',
     cell: ({ row }) => (
       <div>
         <p className="text-sm font-medium text-foreground">{row.original.reference}</p>
@@ -20,12 +20,12 @@ export const invoiceColumns: ColumnDef<Invoice, any>[] = [
   { accessorKey: 'clientName', header: 'Client' },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: 'Statut',
     cell: ({ row }) => <StatusBadge status={row.original.status} meta={INVOICE_STATUS_META} />,
   },
   {
     id: 'total',
-    header: 'Amount',
+    header: 'Montant',
     accessorFn: (row) => computeInvoiceTotal(row.lines).total,
     cell: ({ row }) => (
       <span className="font-medium tabular-nums">
@@ -35,12 +35,12 @@ export const invoiceColumns: ColumnDef<Invoice, any>[] = [
   },
   {
     accessorKey: 'issueDate',
-    header: 'Issued',
+    header: 'Émise le',
     cell: ({ row }) => <span className="text-muted-foreground">{formatDate(row.original.issueDate)}</span>,
   },
   {
     accessorKey: 'dueDate',
-    header: 'Due',
+    header: 'Échéance',
     cell: ({ row }) => <span className="text-muted-foreground">{formatDate(row.original.dueDate)}</span>,
   },
 ]

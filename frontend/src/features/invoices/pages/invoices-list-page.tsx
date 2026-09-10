@@ -24,12 +24,12 @@ export function InvoicesListPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Invoices"
-        description="Manage billing, track payment status and follow up on overdue invoices."
+        title="Factures"
+        description="Gérez la facturation, suivez les paiements et relancez les factures en retard."
         actions={
           <Button className="gap-2" onClick={() => navigate('/invoices/new')}>
             <Plus className="h-4 w-4" />
-            New Invoice
+            Nouvelle facture
           </Button>
         }
       />
@@ -40,15 +40,15 @@ export function InvoicesListPage() {
         isLoading={isLoading}
         error={error}
         onRetry={refetch}
-        searchPlaceholder="Search invoices…"
+        searchPlaceholder="Rechercher une facture…"
         onRowClick={(row) => navigate(`/invoices/${row.id}`)}
-        emptyTitle="No invoices yet"
-        emptyDescription="Create your first invoice to start billing clients."
-        emptyActionLabel="New Invoice"
+        emptyTitle="Aucune facture pour l'instant"
+        emptyDescription="Créez votre première facture pour commencer à facturer vos clients."
+        emptyActionLabel="Nouvelle facture"
         onEmptyAction={() => navigate('/invoices/new')}
         toolbar={
           <FilterSelect
-            label="Status"
+            label="Statut"
             value={statusFilter}
             onChange={setStatusFilter}
             options={Object.entries(INVOICE_STATUS_META).map(([value, meta]) => ({ value, label: meta.label }))}

@@ -15,7 +15,18 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['IBM Plex Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        brand: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"DM Serif Display"', 'ui-serif', 'serif'],
+      },
+      fontSize: {
+        'page-title': ['40px', { lineHeight: '1.15', fontWeight: '700' }],
+        'section-title': ['28px', { lineHeight: '1.2', fontWeight: '600' }],
+        'card-title': ['20px', { lineHeight: '1.3', fontWeight: '500' }],
+        body: ['16px', { lineHeight: '1.5' }],
+        'label-sm': ['14px', { lineHeight: '1.4' }],
+        metadata: ['13px', { lineHeight: '1.3' }],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -26,17 +37,6 @@ export default {
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#172554',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
@@ -101,14 +101,19 @@ export default {
         shimmer: {
           '100%': { transform: 'translateX(100%)' },
         },
+        'fade-in-up': {
+          from: { opacity: '0', transform: 'translateY(8px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         shimmer: 'shimmer 1.5s infinite',
+        'fade-in-up': 'fade-in-up 0.5s ease-out both',
       },
       boxShadow: {
-        card: '0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 0 rgb(0 0 0 / 0.06)',
+        card: '0 1px 2px 0 rgb(10 36 65 / 0.04), 0 1px 2px 0 rgb(10 36 65 / 0.03)',
       },
     },
   },

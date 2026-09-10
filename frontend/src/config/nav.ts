@@ -3,7 +3,7 @@ import {
   LayoutDashboard,
   Users,
   FileText,
-  FolderKanban,
+  Briefcase,
   Receipt,
   Wallet,
   FolderOpen,
@@ -17,10 +17,12 @@ export interface NavItem {
   to: string
   icon: LucideIcon
   children?: { label: string; to: string }[]
+  adminOnly?: boolean
+  requiredPermission?: { module: string; action: string }
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
+  { label: 'Tableau de bord', to: '/dashboard', icon: LayoutDashboard },
   {
     label: 'CRM',
     to: '/crm/clients',
@@ -28,50 +30,52 @@ export const NAV_ITEMS: NavItem[] = [
     children: [{ label: 'Clients', to: '/crm/clients' }],
   },
   {
-    label: 'Quotations',
-    to: '/quotations',
+    label: 'Devis',
+    to: '/devis',
     icon: FileText,
     children: [
-      { label: 'All Quotations', to: '/quotations' },
-      { label: 'Kanban Board', to: '/quotations/kanban' },
+      { label: 'Tous les devis', to: '/devis' },
+      { label: 'Vue Kanban', to: '/devis/kanban' },
     ],
   },
-  { label: 'Projects', to: '/projects', icon: FolderKanban },
-  { label: 'Invoices', to: '/invoices', icon: Receipt },
-  { label: 'Payments', to: '/payments', icon: Wallet },
+  { label: 'Affaires', to: '/affaires', icon: Briefcase, requiredPermission: { module: 'affaires', action: 'lecture' } },
+  { label: 'Factures', to: '/factures', icon: Receipt },
+  { label: 'Paiements', to: '/payments', icon: Wallet },
   { label: 'Documents', to: '/documents', icon: FolderOpen },
   { label: 'Notifications', to: '/notifications', icon: Bell },
   {
     label: 'Administration',
     to: '/admin/users',
     icon: ShieldCheck,
+    adminOnly: true,
     children: [
-      { label: 'Users', to: '/admin/users' },
-      { label: 'Roles', to: '/admin/roles' },
+      { label: 'Utilisateurs', to: '/admin/users' },
+      { label: 'Rôles', to: '/admin/roles' },
       { label: 'Permissions', to: '/admin/permissions' },
     ],
   },
-  { label: 'Settings', to: '/settings', icon: Settings },
+  { label: 'Paramètres', to: '/settings', icon: Settings },
 ]
 
 export const BREADCRUMB_LABELS: Record<string, string> = {
-  dashboard: 'Dashboard',
+  dashboard: 'Tableau de bord',
   crm: 'CRM',
   clients: 'Clients',
-  new: 'New',
-  edit: 'Edit',
-  quotations: 'Quotations',
-  kanban: 'Kanban Board',
-  projects: 'Projects',
-  invoices: 'Invoices',
-  payments: 'Payments',
+  new: 'Nouveau',
+  edit: 'Modifier',
+  devis: 'Devis',
+  kanban: 'Vue Kanban',
+  affaires: 'Affaires',
+  invoices: 'Factures',
+  factures: 'Factures',
+  payments: 'Paiements',
   documents: 'Documents',
   notifications: 'Notifications',
-  settings: 'Settings',
+  settings: 'Paramètres',
   admin: 'Administration',
-  users: 'Users',
-  roles: 'Roles',
+  users: 'Utilisateurs',
+  roles: 'Rôles',
   permissions: 'Permissions',
-  profile: 'My Profile',
-  reminders: 'Reminders',
+  profile: 'Mon profil',
+  reminders: 'Relances',
 }

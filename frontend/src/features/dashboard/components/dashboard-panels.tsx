@@ -7,31 +7,34 @@ import { Button } from '@/components/ui/button'
 import { UserAvatar } from '@/components/shared/user-avatar'
 import { EmptyState } from '@/components/shared/empty-state'
 import { formatDate, formatRelativeTime } from '@/lib/formatters'
-import type { Invoice, Project, RecentActivity, UpcomingDeadline } from '@/types'
+import type { Affaire, Facture, RecentActivity, UpcomingDeadline } from '@/types'
 
-export function ProjectsInProgressPanel({ projects }: { projects: Project[] }) {
+export function ProjectsInProgressPanel({ affaires }: { affaires: Affaire[] }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle>Projects in Progress</CardTitle>
+        <CardTitle>Projets en cours</CardTitle>
         <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" asChild>
-          <Link to="/projects">
-            View all <ArrowRight className="h-3 w-3" />
+          <Link to="/affaires">
+            Voir tout <ArrowRight className="h-3 w-3" />
           </Link>
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
-        {projects.length === 0 ? (
-          <EmptyState title="No active projects" className="border-0 py-6" />
+        {affaires.length === 0 ? (
+          <EmptyState title="Aucun projet actif" className="border-0 py-6" />
         ) : (
-          projects.map((p) => (
-            <Link key={p.id} to={`/projects/${p.id}`} className="block space-y-1.5 rounded-md p-2 -mx-2 hover:bg-accent/50">
+          affaires.map((a) => (
+            <Link key={a.id} to={`/affaires/${a.id}`} className="block space-y-1.5 rounded-md p-2 -mx-2 hover:bg-accent/50">
               <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-sm font-medium text-foreground">{p.name}</p>
-                <span className="shrink-0 text-xs font-medium text-muted-foreground">{p.progressPct}%</span>
+                <p className="truncate text-sm font-medium text-foreground">{a.objet}</p>
+                <span className="shrink-0 text-xs font-medium text-muted-foreground">{a.etatAvancement}%</span>
               </div>
-              <Progress value={p.progressPct} className="h-1.5" />
-              <p className="text-xs text-muted-foreground">{p.clientName} · Due {formatDate(p.endDate)}</p>
+              <Progress value={a.etatAvancement} className="h-1.5" />
+              <p className="text-xs text-muted-foreground">
+                {a.client.raisonSociale}
+                {a.dateFinPrevue ? ` · Échéance ${formatDate(a.dateFinPrevue)}` : ''}
+              </p>
             </Link>
           ))
         )}
@@ -40,35 +43,35 @@ export function ProjectsInProgressPanel({ projects }: { projects: Project[] }) {
   )
 }
 
-export function LateInvoicesPanel({ invoices }: { invoices: Invoice[] }) {
+export function LateInvoicesPanel({ invoices }: { invoices: Facture[] }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle>Late Invoices</CardTitle>
+        <CardTitle>Factures en retard</CardTitle>
         <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" asChild>
-          <Link to="/invoices">
-            View all <ArrowRight className="h-3 w-3" />
+          <Link to="/factures">
+            Voir tout <ArrowRight className="h-3 w-3" />
           </Link>
         </Button>
       </CardHeader>
       <CardContent className="space-y-1">
         {invoices.length === 0 ? (
-          <EmptyState title="No overdue invoices" description="Nice! Everything is up to date." className="border-0 py-6" />
+          <EmptyState title="Aucune facture en retard" description="Parfait ! Tout est à jour." className="border-0 py-6" />
         ) : (
           invoices.map((inv) => (
             <Link
               key={inv.id}
-              to={`/invoices/${inv.id}`}
+              to={`/factures/${inv.id}`}
               className="flex items-center justify-between gap-2 rounded-md p-2 -mx-2 hover:bg-accent/50"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">{inv.reference}</p>
-                  <p className="truncate text-xs text-muted-foreground">{inv.clientName}</p>
+                  <p className="truncate text-sm font-medium text-foreground">{inv.numeroFacture}</p>
+                  <p className="truncate text-xs text-muted-foreground">{inv.client.raisonSociale}</p>
                 </div>
               </div>
-              <span className="shrink-0 text-xs font-medium text-destructive">Due {formatDate(inv.dueDate)}</span>
+              <span className="shrink-0 text-xs font-medium text-destructive">Échéance {formatDate(inv.dateEcheance)}</span>
             </Link>
           ))
         )}
@@ -81,11 +84,11 @@ export function UpcomingDeadlinesPanel({ deadlines }: { deadlines: UpcomingDeadl
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Upcoming Deadlines</CardTitle>
+        <CardTitle>Échéances à venir</CardTitle>
       </CardHeader>
       <CardContent className="space-y-1">
         {deadlines.length === 0 ? (
-          <EmptyState title="Nothing due soon" className="border-0 py-6" icon={Calendar} />
+          <EmptyState title="Rien à venir prochainement" className="border-0 py-6" icon={Calendar} />
         ) : (
           deadlines.map((d) => (
             <div key={d.id} className="flex items-center justify-between gap-2 rounded-md p-2 -mx-2">
@@ -109,11 +112,11 @@ export function RecentActivityPanel({ activities }: { activities: RecentActivity
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
+        <CardTitle>Activité récente</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {activities.length === 0 ? (
-          <EmptyState title="No recent activity" className="border-0 py-6" icon={Clock} />
+          <EmptyState title="Aucune activité récente" className="border-0 py-6" icon={Clock} />
         ) : (
           activities.map((a) => (
             <div key={a.id} className="flex items-start gap-3">

@@ -1,45 +1,113 @@
-import type { AppDocument } from '@/types'
-import { withLatency, generateId } from '@/lib/api-client'
-import { MOCK_DOCUMENTS } from '@/mocks/data/documents'
+import { apiFetch, ApiHttpError } from '@/lib/api-http'
+import { API_BASE_URL } from '@/lib/constants'
+import { useAuthStore } from '@/store/auth-store'
+import { devisService } from '@/services/devis-service'
+import { facturesService } from '@/services/factures-service'
+import type { AppDocument, DocumentCategory } from '@/types'
 
-let documents: AppDocument[] = [...MOCK_DOCUMENTS]
+interface RawDocument {
+  id_document: string
+  designation: string
+  categorie: DocumentCategory
+  fichier: string
+  lie_a: string
+  ajoute_par: string | null
+  ajoute_par_nom: string | null
+  taille_ko: number
+  date_creation: string
+}
+
+function mapDocument(raw: RawDocument): AppDocument {
+  const extension = raw.fichier.split('.').pop()?.toLowerCase() ?? 'fichier'
+  return {
+    id: `doc-${raw.id_document}`,
+    sourceId: raw.id_document,
+    source: 'upload',
+    name: raw.designation,
+    category: raw.categorie,
+    fileType: extension,
+    sizeKb: raw.taille_ko,
+    relatedTo: raw.lie_a || null,
+    ownerName: raw.ajoute_par_nom ?? 'Inconnu',
+    createdAt: raw.date_creation,
+    downloadUrl: raw.fichier,
+  }
+}
 
 export const documentsService = {
-  list: () => withLatency(() => [...documents].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))),
+  // Bibliothèque unifiée : vrais fichiers importés + PDF de devis/factures
+  // générés à la volée — trois sources réelles, aucun mock.
+  list: async (): Promise<AppDocument[]> => {
+    const [documents, devis, factures] = await Promise.all([
+      apiFetch<RawDocument[]>('/api/documents/').then((rows) => rows.map(mapDocument)),
+      devisService.list(),
+      facturesService.list(),
+    ])
 
-  getById: (id: string) =>
-    withLatency(() => {
-      const doc = documents.find((d) => d.id === id)
-      if (!doc) throw new Error('Document not found.')
-      return doc
-    }),
+    const devisDocuments: AppDocument[] = devis.map((d) => ({
+      id: `devis-${d.id}`,
+      sourceId: d.id,
+      source: 'devis',
+      name: `Devis ${d.numero}`,
+      category: 'contract',
+      fileType: 'pdf',
+      sizeKb: null,
+      relatedTo: d.client.raisonSociale,
+      ownerName: `${d.chargeAffaires.prenom} ${d.chargeAffaires.nom}`,
+      createdAt: d.dateCreation,
+      downloadUrl: null,
+    }))
 
-  upload: (payload: { name: string; category: AppDocument['category']; sizeKb: number; ownerName: string }) =>
-    withLatency(
-      () => {
-        const now = new Date().toISOString()
-        const ext = payload.name.split('.').pop()?.toLowerCase() ?? 'pdf'
-        const doc: AppDocument = {
-          id: generateId('doc'),
-          name: payload.name,
-          category: payload.category,
-          fileType: (['pdf', 'docx', 'xlsx', 'png', 'jpg', 'dwg', 'zip'].includes(ext) ? ext : 'pdf') as AppDocument['fileType'],
-          sizeKb: payload.sizeKb,
-          ownerName: payload.ownerName,
-          uploadedAt: now,
-          updatedAt: now,
-          versions: [{ id: generateId('dv'), version: 1, uploadedBy: payload.ownerName, uploadedAt: now, sizeKb: payload.sizeKb, note: 'Initial upload' }],
-          tags: [],
-        }
-        documents = [doc, ...documents]
-        return doc
-      },
-      { minMs: 600, maxMs: 1400, failRate: 0.08, errorMessage: 'Upload failed. Please check your connection and try again.' },
-    ),
+    const facturesDocuments: AppDocument[] = factures.map((f) => ({
+      id: `facture-${f.id}`,
+      sourceId: f.id,
+      source: 'facture',
+      name: `Facture ${f.numeroFacture}`,
+      category: 'financial',
+      fileType: 'pdf',
+      sizeKb: null,
+      relatedTo: f.client.raisonSociale,
+      ownerName: f.client.raisonSociale,
+      createdAt: f.dateCreation,
+      downloadUrl: null,
+    }))
 
-  remove: (id: string) =>
-    withLatency(() => {
-      documents = documents.filter((d) => d.id !== id)
-      return { success: true }
-    }),
+    return [...documents, ...devisDocuments, ...facturesDocuments].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+  },
+
+  upload: async (payload: { designation: string; categorie: DocumentCategory; fichier: File; lieA?: string }): Promise<AppDocument> => {
+    const { accessToken } = useAuthStore.getState()
+    const formData = new FormData()
+    formData.append('designation', payload.designation)
+    formData.append('categorie', payload.categorie)
+    formData.append('fichier', payload.fichier)
+    if (payload.lieA) formData.append('lie_a', payload.lieA)
+
+    let response: Response
+    try {
+      response = await fetch(`${API_BASE_URL}/api/documents/`, {
+        method: 'POST',
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+        body: formData,
+      })
+    } catch {
+      throw new ApiHttpError('Impossible de contacter le serveur. Vérifie que le backend est démarré.', 0)
+    }
+    const data = await response.json().catch(() => null)
+    if (!response.ok) {
+      throw new ApiHttpError(data?.detail ?? "Impossible d'importer le document.", response.status)
+    }
+    return mapDocument(data)
+  },
+
+  remove: (doc: AppDocument): Promise<void> => apiFetch<void>(`/api/documents/${doc.sourceId}/`, { method: 'DELETE' }),
+
+  // Devis/facture : pas de fichier stocké, on redéclenche la génération PDF
+  // existante (déjà utilisée par les modules Devis/Factures) et on force le
+  // téléchargement dans le navigateur.
+  downloadPdf: (doc: AppDocument): Promise<void> => {
+    if (doc.source === 'devis') return devisService.downloadPdf(doc.sourceId, `${doc.name}.pdf`)
+    if (doc.source === 'facture') return facturesService.downloadPdf(doc.sourceId, `${doc.name}.pdf`)
+    return Promise.reject(new Error('Ce document ne peut pas être téléchargé via cette méthode.'))
+  },
 }

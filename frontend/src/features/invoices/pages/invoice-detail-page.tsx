@@ -24,7 +24,7 @@ export function InvoiceDetailPage() {
   )
 
   if (isLoading) return <DetailSkeleton />
-  if (error || !invoice) return <ErrorState onRetry={refetch} description="We could not load this invoice." />
+  if (error || !invoice) return <ErrorState onRetry={refetch} description="Impossible de charger cette facture." />
 
   const totals = computeInvoiceTotal(invoice.lines)
   const remaining = Math.max(totals.total - invoice.amountPaid, 0)
@@ -36,8 +36,8 @@ export function InvoiceDetailPage() {
         title={invoice.reference}
         description={
           <>
-            Billed to{' '}
-            <Link to={`/crm/clients/${invoice.clientId}`} className="font-medium text-primary hover:underline">
+            Facturé à{' '}
+            <Link to={`/crm/clients/${invoice.clientId}`} className="font-medium text-accent-foreground hover:underline">
               {invoice.clientName}
             </Link>
           </>
@@ -48,16 +48,16 @@ export function InvoiceDetailPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Line Items</CardTitle>
+            <CardTitle>Lignes</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Unit Price</TableHead>
-                  <TableHead className="text-right">Tax</TableHead>
+                  <TableHead className="text-right">Qté</TableHead>
+                  <TableHead className="text-right">Prix unitaire</TableHead>
+                  <TableHead className="text-right">TVA</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                 </TableRow>
               </TableHeader>
@@ -78,11 +78,11 @@ export function InvoiceDetailPage() {
 
             <div className="ml-auto max-w-xs space-y-1.5 border-t border-border pt-3 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>Subtotal</span>
+                <span>Sous-total</span>
                 <span className="tabular-nums">{formatCurrency(totals.subtotal, invoice.currency)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>Tax</span>
+                <span>TVA</span>
                 <span className="tabular-nums">{formatCurrency(totals.taxTotal, invoice.currency)}</span>
               </div>
               <div className="flex justify-between border-t border-border pt-1.5 text-base font-semibold text-foreground">
@@ -98,25 +98,25 @@ export function InvoiceDetailPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Payment Status</CardTitle>
+              <CardTitle>Statut de paiement</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Paid</span>
+                <span className="text-muted-foreground">Payé</span>
                 <span className="font-medium text-foreground">{paidPct}%</span>
               </div>
               <Progress value={paidPct} />
               <div className="space-y-1 pt-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Paid</span>
+                  <span className="text-muted-foreground">Payé</span>
                   <span className="font-medium text-foreground">{formatCurrency(invoice.amountPaid, invoice.currency)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Remaining</span>
+                  <span className="text-muted-foreground">Restant</span>
                   <span className="font-medium text-foreground">{formatCurrency(remaining, invoice.currency)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Due date</span>
+                  <span className="text-muted-foreground">Date d'échéance</span>
                   <span className="font-medium text-foreground">{formatDate(invoice.dueDate)}</span>
                 </div>
               </div>
@@ -127,21 +127,21 @@ export function InvoiceDetailPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Invoice History</CardTitle>
+          <CardTitle>Historique de la facture</CardTitle>
         </CardHeader>
         <CardContent>
           {timelineLoading ? (
             <DetailSkeleton />
           ) : !timeline || timeline.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
+            <p className="text-sm text-muted-foreground">Aucune activité enregistrée pour l'instant.</p>
           ) : (
             <Timeline
               entries={timeline.map((t) => ({
                 id: t.id,
-                title: t.title,
-                description: t.description,
+                title: `${t.action} ${t.target}`,
+                description: t.actorName,
                 timestamp: t.createdAt,
-                tone: t.type === 'payment_received' ? 'success' : t.type === 'overdue' ? 'destructive' : 'default',
+                tone: 'default',
               }))}
             />
           )}

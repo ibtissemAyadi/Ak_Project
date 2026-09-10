@@ -11,8 +11,8 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({
-  title = 'Something went wrong',
-  description = 'We could not load this data. Please try again.',
+  title = 'Une erreur est survenue',
+  description = 'Impossible de charger ces données. Veuillez réessayer.',
   onRetry,
   className,
 }: ErrorStateProps) {
@@ -33,7 +33,7 @@ export function ErrorState({
       {onRetry ? (
         <Button size="sm" variant="outline" onClick={onRetry} className="mt-2 gap-2">
           <RotateCw className="h-3.5 w-3.5" />
-          Try again
+          Réessayer
         </Button>
       ) : null}
     </div>

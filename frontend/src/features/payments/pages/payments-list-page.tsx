@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { useAsync } from '@/hooks/use-async'
 import { paymentsService } from '@/services/payments-service'
 import { paymentColumns } from '@/features/payments/components/payment-columns'
-import { PAYMENT_STATUS_META } from '@/lib/constants'
+import { FACTURE_STATUT_META } from '@/lib/constants'
 
 export function PaymentsListPage() {
   const navigate = useNavigate()
@@ -24,12 +24,12 @@ export function PaymentsListPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Payments"
-        description="Track incoming payments and manage automatic reminders."
+        title="Paiements"
+        description="Suivez toutes les factures (payées ou non) et gérez les relances automatiques."
         actions={
           <Button variant="outline" className="gap-2" onClick={() => navigate('/payments/reminders')}>
             <BellRing className="h-4 w-4" />
-            Reminders
+            Relances
           </Button>
         }
       />
@@ -40,16 +40,16 @@ export function PaymentsListPage() {
         isLoading={isLoading}
         error={error}
         onRetry={refetch}
-        searchPlaceholder="Search payments…"
+        searchPlaceholder="Rechercher un paiement…"
         onRowClick={(row) => navigate(`/payments/${row.id}`)}
-        emptyTitle="No payments recorded"
-        emptyDescription="Payments will appear here once invoices are paid."
+        emptyTitle="Aucune facture enregistrée"
+        emptyDescription="Les factures apparaîtront ici, payées ou non, une fois émises."
         toolbar={
           <FilterSelect
-            label="Status"
+            label="Statut"
             value={statusFilter}
             onChange={setStatusFilter}
-            options={Object.entries(PAYMENT_STATUS_META).map(([value, meta]) => ({ value, label: meta.label }))}
+            options={Object.entries(FACTURE_STATUT_META).map(([value, meta]) => ({ value, label: meta.label }))}
           />
         }
       />

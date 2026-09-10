@@ -70,7 +70,7 @@ export function KanbanBoard<T>({ columns, getItemId, onMoveItem, renderCard }: K
             })}
             {column.items.length === 0 ? (
               <div className="rounded-md border border-dashed border-border py-6 text-center text-xs text-muted-foreground">
-                Drop here
+                Déposer ici
               </div>
             ) : null}
           </div>

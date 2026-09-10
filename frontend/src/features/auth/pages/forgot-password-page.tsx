@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/form'
 
 const schema = z.object({
-  email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
+  email: z.string().min(1, "L'email est requis").email('Saisissez une adresse email valide'),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -39,23 +39,23 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <AuthLayout title="Reset your password" subtitle="We'll email you a link to reset your password.">
+    <AuthLayout title="Réinitialisez votre mot de passe" subtitle="Nous vous enverrons un lien pour réinitialiser votre mot de passe.">
       {sent ? (
         <div className="space-y-5">
           <div className="flex items-start gap-3 rounded-lg border border-success/30 bg-success/10 p-4">
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">Check your inbox</p>
+              <p className="text-sm font-medium text-foreground">Vérifiez votre boîte de réception</p>
               <p className="text-sm text-muted-foreground">
-                If an account exists for <span className="font-medium text-foreground">{submittedEmail}</span>, a
-                reset link has been sent.
+                Si un compte existe pour <span className="font-medium text-foreground">{submittedEmail}</span>, un
+                lien de réinitialisation a été envoyé.
               </p>
             </div>
           </div>
           <Button variant="outline" className="w-full gap-2" asChild>
             <Link to="/login">
               <ArrowLeft className="h-4 w-4" />
-              Back to sign in
+              Retour à la connexion
             </Link>
           </Button>
         </div>
@@ -67,7 +67,7 @@ export function ForgotPasswordPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Work email</FormLabel>
+                  <FormLabel>Email professionnel</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="you@ak-consulting.com" autoComplete="email" {...field} />
                   </FormControl>
@@ -77,10 +77,10 @@ export function ForgotPasswordPage() {
             />
 
             <Button type="submit" className="w-full gap-2" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? 'Sending…' : (
+              {form.formState.isSubmitting ? 'Envoi…' : (
                 <>
                   <Send className="h-4 w-4" />
-                  Send reset link
+                  Envoyer le lien
                 </>
               )}
             </Button>
@@ -88,7 +88,7 @@ export function ForgotPasswordPage() {
             <Button variant="ghost" className="w-full gap-2" asChild>
               <Link to="/login">
                 <ArrowLeft className="h-4 w-4" />
-                Back to sign in
+                Retour à la connexion
               </Link>
             </Button>
           </form>

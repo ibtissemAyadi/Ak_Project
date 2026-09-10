@@ -12,9 +12,9 @@ import type { ThemeMode } from '@/store/theme-store'
 import { cn } from '@/lib/utils'
 
 const OPTIONS: { mode: ThemeMode; label: string; icon: typeof Sun }[] = [
-  { mode: 'light', label: 'Light', icon: Sun },
-  { mode: 'dark', label: 'Dark', icon: Moon },
-  { mode: 'system', label: 'System', icon: Monitor },
+  { mode: 'light', label: 'Clair', icon: Sun },
+  { mode: 'dark', label: 'Sombre', icon: Moon },
+  { mode: 'system', label: 'Système', icon: Monitor },
 ]
 
 export function ThemeToggle() {
@@ -24,8 +24,8 @@ export function ThemeToggle() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="text-muted-foreground">
-          {resolvedTheme === 'dark' ? <Moon className="h-4.5 w-4.5" /> : <Sun className="h-4.5 w-4.5" />}
-          <span className="sr-only">Toggle theme</span>
+          {resolvedTheme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+          <span className="sr-only">Changer le thème</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">

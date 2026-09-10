@@ -24,7 +24,7 @@ export function UserMenu() {
 
   const handleLogout = () => {
     logout()
-    toast.success('Signed out successfully.')
+    toast.success('Déconnexion réussie.')
     navigate('/login', { replace: true })
   }
 
@@ -48,21 +48,21 @@ export function UserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate('/admin/profile')}>
           <User className="h-4 w-4" />
-          My Profile
+          Mon profil
           <span className="ml-auto text-[11px] text-muted-foreground">{user.role.libelle}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/settings')}>
           <Settings className="h-4 w-4" />
-          Settings
+          Paramètres
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => toast.info('Support request sent to the AK Consulting help desk.')}>
+        <DropdownMenuItem onClick={() => toast.info('Demande d\'assistance envoyée au support AK Consulting.')}>
           <LifeBuoy className="h-4 w-4" />
-          Help & Support
+          Aide & Support
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
           <LogOut className="h-4 w-4" />
-          Sign out
+          Se déconnecter
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

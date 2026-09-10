@@ -27,42 +27,42 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Settings" description="Configure your workspace preferences." />
+      <PageHeader title="Paramètres" description="Configurez les préférences de votre espace de travail." />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Company</CardTitle>
-            <CardDescription>General information about your organization.</CardDescription>
+            <CardTitle>Entreprise</CardTitle>
+            <CardDescription>Informations générales sur votre organisation.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Company name</Label>
+              <Label>Nom de l'entreprise</Label>
               <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Default currency</Label>
+              <Label>Devise par défaut</Label>
               <Select value={currency} onValueChange={setCurrency}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="EUR">Euro (EUR)</SelectItem>
-                  <SelectItem value="USD">US Dollar (USD)</SelectItem>
-                  <SelectItem value="GBP">British Pound (GBP)</SelectItem>
+                  <SelectItem value="USD">Dollar américain (USD)</SelectItem>
+                  <SelectItem value="GBP">Livre sterling (GBP)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Timezone</Label>
+              <Label>Fuseau horaire</Label>
               <Select value={timezone} onValueChange={setTimezone}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Europe/Paris">Europe/Paris (GMT+1)</SelectItem>
-                  <SelectItem value="Europe/London">Europe/London (GMT)</SelectItem>
-                  <SelectItem value="Africa/Tunis">Africa/Tunis (GMT+1)</SelectItem>
+                  <SelectItem value="Europe/London">Europe/Londres (GMT)</SelectItem>
+                  <SelectItem value="Africa/Tunis">Afrique/Tunis (GMT+1)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -71,14 +71,14 @@ export function SettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Appearance</CardTitle>
-            <CardDescription>Customize how the workspace looks for you.</CardDescription>
+            <CardTitle>Apparence</CardTitle>
+            <CardDescription>Personnalisez l'apparence de votre espace de travail.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-foreground">Theme</p>
-                <p className="text-xs text-muted-foreground">Switch between light, dark or system.</p>
+                <p className="text-sm font-medium text-foreground">Thème</p>
+                <p className="text-xs text-muted-foreground">Basculez entre clair, sombre ou système.</p>
               </div>
               <ThemeToggle />
             </div>
@@ -87,22 +87,22 @@ export function SettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Security</CardTitle>
-            <CardDescription>Protect your account and workspace data.</CardDescription>
+            <CardTitle>Sécurité</CardTitle>
+            <CardDescription>Protégez votre compte et les données de votre espace de travail.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-foreground">Two-factor authentication</p>
-                <p className="text-xs text-muted-foreground">Require a verification code at sign-in.</p>
+                <p className="text-sm font-medium text-foreground">Authentification à deux facteurs</p>
+                <p className="text-xs text-muted-foreground">Exiger un code de vérification à la connexion.</p>
               </div>
               <Switch checked={twoFactor} onCheckedChange={setTwoFactor} />
             </div>
             <Separator />
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-foreground">Weekly digest email</p>
-                <p className="text-xs text-muted-foreground">Get a weekly summary of activity across your workspace.</p>
+                <p className="text-sm font-medium text-foreground">Résumé hebdomadaire par email</p>
+                <p className="text-xs text-muted-foreground">Recevez un résumé hebdomadaire de l'activité de votre espace de travail.</p>
               </div>
               <Switch checked={weeklyDigest} onCheckedChange={setWeeklyDigest} />
             </div>
@@ -110,7 +110,7 @@ export function SettingsPage() {
         </Card>
       </div>
 
-      <Button onClick={() => toast.success('Settings saved successfully.')}>Save Settings</Button>
+      <Button onClick={() => toast.success('Paramètres enregistrés avec succès.')}>Enregistrer les paramètres</Button>
     </div>
   )
 }

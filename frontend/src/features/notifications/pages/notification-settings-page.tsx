@@ -12,7 +12,7 @@ import { NOTIFICATION_CATEGORY_META } from '@/lib/constants'
 type Channel = 'inApp' | 'email' | 'sms'
 
 const CHANNELS: { key: Channel; label: string }[] = [
-  { key: 'inApp', label: 'In-app' },
+  { key: 'inApp', label: 'Application' },
   { key: 'email', label: 'Email' },
   { key: 'sms', label: 'SMS' },
 ]
@@ -39,22 +39,22 @@ export function NotificationSettingsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Notification Settings"
-        description="Choose how you want to be notified for each type of event."
+        title="Paramètres de notifications"
+        description="Choisissez comment vous souhaitez être notifié pour chaque type d'événement."
         actions={
           <Button variant="outline" onClick={() => navigate('/notifications')}>
-            Back to Notifications
+            Retour aux notifications
           </Button>
         }
       />
 
       <Card className="max-w-2xl">
         <CardHeader>
-          <CardTitle>Preferences</CardTitle>
+          <CardTitle>Préférences</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
           <div className="grid grid-cols-[1fr_repeat(3,80px)] items-center gap-2 pb-2 text-xs font-medium text-muted-foreground">
-            <span>Event type</span>
+            <span>Type d'événement</span>
             {CHANNELS.map((c) => (
               <span key={c.key} className="text-center">{c.label}</span>
             ))}
@@ -73,7 +73,7 @@ export function NotificationSettingsPage() {
         </CardContent>
       </Card>
 
-      <Button onClick={() => toast.success('Notification preferences saved.')}>Save Preferences</Button>
+      <Button onClick={() => toast.success('Préférences de notification enregistrées.')}>Enregistrer les préférences</Button>
     </div>
   )
 }

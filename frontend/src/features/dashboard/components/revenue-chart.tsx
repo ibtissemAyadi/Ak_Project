@@ -1,8 +1,7 @@
 import {
-  Area,
-  AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
-  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -17,17 +16,11 @@ export function RevenueChart({ data }: { data: RevenuePoint[] }) {
   return (
     <Card className="col-span-1 lg:col-span-2">
       <CardHeader>
-        <CardTitle>Revenue vs. Target</CardTitle>
+        <CardTitle>Chiffre d'affaires prévisionnel par mois</CardTitle>
       </CardHeader>
       <CardContent className="h-72 pl-0">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 4, right: 16, left: 8, bottom: 0 }}>
-            <defs>
-              <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
-              </linearGradient>
-            </defs>
+          <BarChart data={data} margin={{ top: 4, right: 16, left: 8, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
             <YAxis
@@ -39,6 +32,7 @@ export function RevenueChart({ data }: { data: RevenuePoint[] }) {
               width={40}
             />
             <Tooltip
+              cursor={{ fill: 'hsl(var(--accent))' }}
               formatter={(value) => formatCurrency(Number(value))}
               contentStyle={{
                 borderRadius: 8,
@@ -48,25 +42,8 @@ export function RevenueChart({ data }: { data: RevenuePoint[] }) {
                 fontSize: 12,
               }}
             />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Area
-              type="monotone"
-              dataKey="revenue"
-              name="Revenue"
-              stroke="hsl(var(--chart-1))"
-              fill="url(#revenueFill)"
-              strokeWidth={2}
-            />
-            <Area
-              type="monotone"
-              dataKey="target"
-              name="Target"
-              stroke="hsl(var(--chart-3))"
-              fill="transparent"
-              strokeDasharray="4 4"
-              strokeWidth={2}
-            />
-          </AreaChart>
+            <Bar dataKey="revenue" name="CA prévisionnel" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} maxBarSize={40} />
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>

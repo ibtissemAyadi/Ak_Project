@@ -1,50 +1,77 @@
-import type { Client } from '@/types'
-import { withLatency, generateId } from '@/lib/api-client'
-import { MOCK_CLIENTS } from '@/mocks/data/clients'
+import { apiFetch } from '@/lib/api-http'
+import type { CrmClient, CrmClientStatut } from '@/types'
 
-let clients: Client[] = [...MOCK_CLIENTS]
+// Shape returned by Django for a Client (crm.ClientSerializer).
+interface RawClient {
+  id_client: string
+  raison_sociale: string
+  matricule_fiscal: string | null
+  adresse: string
+  pays: string
+  secteur_activite: string
+  statut: CrmClientStatut
+  telephone: string
+  email: string
+  date_creation: string
+  date_modification: string
+}
 
+function mapClient(raw: RawClient): CrmClient {
+  return {
+    id: raw.id_client,
+    raisonSociale: raw.raison_sociale,
+    matriculeFiscal: raw.matricule_fiscal ?? '',
+    adresse: raw.adresse,
+    pays: raw.pays,
+    secteurActivite: raw.secteur_activite,
+    statut: raw.statut,
+    telephone: raw.telephone,
+    email: raw.email,
+    dateCreation: raw.date_creation,
+    dateModification: raw.date_modification,
+  }
+}
+
+export interface ClientPayload {
+  raisonSociale: string
+  matriculeFiscal?: string
+  adresse?: string
+  pays?: string
+  secteurActivite?: string
+  statut: CrmClientStatut
+  telephone?: string
+  email?: string
+}
+
+function toApiPayload(payload: Partial<ClientPayload>) {
+  return {
+    ...(payload.raisonSociale !== undefined ? { raison_sociale: payload.raisonSociale } : {}),
+    ...(payload.matriculeFiscal !== undefined ? { matricule_fiscal: payload.matriculeFiscal } : {}),
+    ...(payload.adresse !== undefined ? { adresse: payload.adresse } : {}),
+    ...(payload.pays !== undefined ? { pays: payload.pays } : {}),
+    ...(payload.secteurActivite !== undefined ? { secteur_activite: payload.secteurActivite } : {}),
+    ...(payload.statut !== undefined ? { statut: payload.statut } : {}),
+    ...(payload.telephone !== undefined ? { telephone: payload.telephone } : {}),
+    ...(payload.email !== undefined ? { email: payload.email } : {}),
+  }
+}
+
+// Real backend-backed CRM client service — GET/POST/PUT/PATCH only, no
+// DELETE (a client is never deleted, only moved to statut 'Inactif').
 export const clientsService = {
-  list: () => withLatency(() => [...clients].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))),
+  list: (): Promise<CrmClient[]> => apiFetch<RawClient[]>('/api/clients/').then((rows) => rows.map(mapClient)),
 
-  getById: (id: string) =>
-    withLatency(() => {
-      const client = clients.find((c) => c.id === id)
-      if (!client) throw new Error('Client not found.')
-      return client
-    }),
+  getById: (id: string): Promise<CrmClient> => apiFetch<RawClient>(`/api/clients/${id}/`).then(mapClient),
 
-  create: (payload: Omit<Client, 'id' | 'createdAt' | 'totalRevenue' | 'openQuotations' | 'activeProjects'>) =>
-    withLatency(
-      () => {
-        const client: Client = {
-          ...payload,
-          id: generateId('cli'),
-          createdAt: new Date().toISOString(),
-          totalRevenue: 0,
-          openQuotations: 0,
-          activeProjects: 0,
-        }
-        clients = [client, ...clients]
-        return client
-      },
-      { failRate: 0.05 },
-    ),
+  create: (payload: ClientPayload): Promise<CrmClient> =>
+    apiFetch<RawClient>('/api/clients/', {
+      method: 'POST',
+      body: JSON.stringify(toApiPayload(payload)),
+    }).then(mapClient),
 
-  update: (id: string, payload: Partial<Client>) =>
-    withLatency(
-      () => {
-        const index = clients.findIndex((c) => c.id === id)
-        if (index === -1) throw new Error('Client not found.')
-        clients[index] = { ...clients[index], ...payload }
-        return clients[index]
-      },
-      { failRate: 0.05 },
-    ),
-
-  remove: (id: string) =>
-    withLatency(() => {
-      clients = clients.filter((c) => c.id !== id)
-      return { success: true }
-    }),
+  update: (id: string, payload: Partial<ClientPayload>): Promise<CrmClient> =>
+    apiFetch<RawClient>(`/api/clients/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(toApiPayload(payload)),
+    }).then(mapClient),
 }

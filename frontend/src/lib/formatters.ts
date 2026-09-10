@@ -1,5 +1,5 @@
 export function formatCurrency(value: number, currency = 'EUR') {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
     currency,
     maximumFractionDigits: 0,
@@ -7,7 +7,7 @@ export function formatCurrency(value: number, currency = 'EUR') {
 }
 
 export function formatNumber(value: number) {
-  return new Intl.NumberFormat('en-US').format(value)
+  return new Intl.NumberFormat('fr-FR').format(value)
 }
 
 export function formatPercent(value: number) {
@@ -16,12 +16,12 @@ export function formatPercent(value: number) {
 
 export function formatDate(value: string | Date) {
   const date = typeof value === 'string' ? new Date(value) : value
-  return new Intl.DateTimeFormat('en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(date)
+  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(date)
 }
 
 export function formatDateTime(value: string | Date) {
   const date = typeof value === 'string' ? new Date(value) : value
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -34,7 +34,7 @@ export function formatRelativeTime(value: string | Date) {
   const date = typeof value === 'string' ? new Date(value) : value
   const diffMs = date.getTime() - Date.now()
   const diffMinutes = Math.round(diffMs / 60000)
-  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
+  const rtf = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' })
 
   const absMin = Math.abs(diffMinutes)
   if (absMin < 60) return rtf.format(diffMinutes, 'minute')

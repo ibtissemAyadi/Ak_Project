@@ -11,16 +11,17 @@ interface FilterSelectProps {
   onChange: (value: string) => void
   options: FilterOption[]
   className?: string
+  allLabel?: string
 }
 
-export function FilterSelect({ label, value, onChange, options, className }: FilterSelectProps) {
+export function FilterSelect({ label, value, onChange, options, className, allLabel = 'Tous' }: FilterSelectProps) {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className={className ?? 'h-9 w-[160px]'}>
         <SelectValue placeholder={label} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">{`All ${label}`}</SelectItem>
+        <SelectItem value="all">{allLabel}</SelectItem>
         {options.map((opt) => (
           <SelectItem key={opt.value} value={opt.value}>
             {opt.label}

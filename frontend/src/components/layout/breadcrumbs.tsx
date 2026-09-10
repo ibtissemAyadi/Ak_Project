@@ -13,7 +13,7 @@ import { BREADCRUMB_LABELS } from '@/config/nav'
 
 function toLabel(segment: string) {
   if (BREADCRUMB_LABELS[segment]) return BREADCRUMB_LABELS[segment]
-  if (/^[a-z]{2,4}-[a-z0-9]+$/i.test(segment)) return 'Details'
+  if (/^[a-z]{2,4}-[a-z0-9]+$/i.test(segment)) return 'Détails'
   return segment.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 

@@ -36,11 +36,11 @@ export function FileDropzone({ onFilesSelected, accept, multiple = true, classNa
         className,
       )}
     >
-      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 text-accent-foreground">
         <UploadCloud className="h-5 w-5" />
       </div>
-      <p className="text-sm font-medium text-foreground">Drag & drop files here, or click to browse</p>
-      <p className="text-xs text-muted-foreground">PDF, DOCX, XLSX, DWG, PNG up to 25MB</p>
+      <p className="text-sm font-medium text-foreground">Glissez-déposez des fichiers ici, ou cliquez pour parcourir</p>
+      <p className="text-xs text-muted-foreground">PDF, DOCX, XLSX, DWG, PNG jusqu'à 25 Mo</p>
       <input
         ref={inputRef}
         type="file"

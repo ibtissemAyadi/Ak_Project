@@ -87,6 +87,203 @@ export interface Client {
   notes?: string
 }
 
+// Real, API-backed CRM client (backend `crm.Client` model) — distinct from
+// the mock `Client` above, which the rest of the still-mocked ERP (quotations,
+// invoices, projects, command palette…) keeps using for its client picker/name
+// fields. Kept separate to avoid a much larger cross-module rewrite.
+export type CrmClientStatut = 'Prospect' | 'Actif' | 'Inactif'
+
+export interface CrmClient {
+  id: Id
+  raisonSociale: string
+  matriculeFiscal: string
+  adresse: string
+  pays: string
+  secteurActivite: string
+  statut: CrmClientStatut
+  telephone: string
+  email: string
+  dateCreation: string
+  dateModification: string
+}
+
+// Real, API-backed devis/chiffrage (backend `devis.Devis` model + lines) —
+// distinct from the mock `Quotation` used elsewhere (dashboard charts,
+// command palette, kanban board), same reasoning as CrmClient above.
+export type DevisStatut = 'Brouillon' | 'En_preparation' | 'A_valider' | 'Envoye' | 'Accepte' | 'Refuse' | 'Annule'
+export type DevisTypeValeur = 'pourcentage' | 'valeur'
+
+export interface DevisLigne {
+  id: Id
+  devis: Id
+  description: string
+  quantite: number | null
+  prixUnitaire: number | null
+  montant: number
+}
+
+export interface DevisHistoriqueStatut {
+  id: Id
+  ancienStatut: string
+  nouveauStatut: DevisStatut
+  utilisateur: Id | null
+  utilisateurNom: string | null
+  date: string
+  commentaire: string
+}
+
+export interface DevisCommentaire {
+  id: Id
+  devis: Id
+  auteur: Id
+  auteurNom: string
+  texte: string
+  dateCreation: string
+}
+
+export interface DevisListItem {
+  id: Id
+  numero: string
+  version: number
+  estCourante: boolean
+  client: { id: Id; raisonSociale: string }
+  chargeAffaires: { id: Id; nom: string; prenom: string; coutHoraire: number }
+  objet: string
+  statut: DevisStatut
+  montantHt: number
+  montantTva: number
+  montantTtc: number
+  dateCreation: string
+  dateValidite: string | null
+}
+
+export interface Devis extends DevisListItem {
+  transitionsPossibles: DevisStatut[]
+  affaireId: Id | null
+  tauxTvaDefaut: number
+  typeMarge: DevisTypeValeur
+  valeurMarge: number
+  typeRemise: DevisTypeValeur
+  valeurRemise: number
+  commentaireJustification: string
+  sousTotal: number
+  montantMarge: number
+  montantRemise: number
+  dateModification: string
+  lignes: DevisLigne[]
+  historiqueStatuts: DevisHistoriqueStatut[]
+  commentaires: DevisCommentaire[]
+}
+
+export interface DevisIntervenant {
+  id: Id
+  nom: string
+  prenom: string
+  coutHoraire: number
+}
+
+// ---------- Affaires ----------
+
+export type AffairePriorite = 'Basse' | 'Normale' | 'Haute' | 'Critique'
+
+export interface AffaireCommentaire {
+  id: Id
+  affaire: Id
+  auteur: Id
+  auteurNom: string
+  texte: string
+  dateCreation: string
+}
+
+export interface PieceJointeAffaire {
+  id: Id
+  affaire: Id
+  designation: string
+  fichierUrl: string
+  ajoutePar: Id | null
+  ajouteParNom: string | null
+  dateAjout: string
+}
+
+export interface Affaire {
+  id: Id
+  numeroAffaire: string
+  devis: Id
+  devisNumero: string
+  objet: string
+  client: { id: Id; raisonSociale: string }
+  chargeAffaires: { id: Id; nom: string; prenom: string; coutHoraire: number }
+  budget: number
+  heuresPrevues: number
+  heuresConsommees: number
+  heuresRestantes: number
+  etatAvancement: number
+  priorite: AffairePriorite
+  dateDebut: string | null
+  dateFinPrevue: string | null
+  dateFinReelle: string | null
+  dateCreation: string
+}
+
+export interface AffaireDetail extends Affaire {
+  dateModification: string
+  commentaires: AffaireCommentaire[]
+  piecesJointes: PieceJointeAffaire[]
+  factureId: Id | null
+  // Le devis d'origine complet (lignes, montants, marge/remise, historique...).
+  devisDetail: Devis
+}
+
+// ---------- Factures ----------
+
+export type FactureStatut = 'Brouillon' | 'Envoyee' | 'Payee' | 'Partiellement_payee' | 'En_retard' | 'Annulee'
+export type ModeReglement = 'virement' | 'cheque' | 'especes' | 'carte' | 'prelevement'
+
+// Trois méthodes de calcul de la date d'échéance, mutuellement exclusives —
+// voir calculer_date_echeance côté backend (factures/models.py) pour le
+// détail exact de chaque méthode.
+export type TypeEcheance = 'net' | 'fin_mois' | 'jour_fixe'
+
+export interface LigneFacture {
+  id: Id
+  facture: Id
+  description: string
+  quantite: number | null
+  prixUnitaire: number | null
+  montant: number
+}
+
+export interface Facture {
+  id: Id
+  numeroFacture: string
+  affaire: Id
+  numeroAffaire: string
+  numeroDevis: string
+  objet: string
+  client: { id: Id; raisonSociale: string; email: string }
+  statut: FactureStatut
+  dateFacture: string
+  dateEcheance: string
+  modeReglement: ModeReglement
+  typeEcheance: TypeEcheance
+  nombreJours: number | null
+  jourFixeMoisSuivant: number | null
+  labelEcheance: string
+  sousTotal: number
+  montantTva: number
+  montantTotal: number
+  montantAPayer: number
+  dateCreation: string
+  dateModification: string
+}
+
+export interface FactureDetail extends Facture {
+  tauxTva: number
+  commentaire: string
+  signature: string | null
+  lignes: LigneFacture[]
+}
+
 export interface Contact {
   id: Id
   clientId: Id
@@ -252,9 +449,14 @@ export interface Invoice {
 
 // ---------- Payments ----------
 
-export type PaymentMethod = 'bank_transfer' | 'credit_card' | 'check' | 'cash'
-export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded'
-
+// Un « paiement » n'est pas une ressource propre côté backend (pas de
+// module Paiements réel) : c'est une facture, vue sous l'angle de l'argent
+// dû/reçu — les factures Brouillon (jamais envoyées au client) n'apparaissent
+// pas ici, ça n'a pas de sens de "relancer" un paiement que le client n'a
+// même pas encore reçu. method et status réutilisent donc directement
+// ModeReglement et FactureStatut (les vraies valeurs de la facture), pas une
+// énumération de paiement inventée qui ne correspondrait à rien de réel
+// côté serveur.
 export interface Payment {
   id: Id
   reference: string
@@ -262,10 +464,12 @@ export interface Payment {
   invoiceReference: string
   clientId: Id
   clientName: string
+  clientEmail: string
   amount: number
   currency: string
-  method: PaymentMethod
-  status: PaymentStatus
+  method: ModeReglement
+  status: FactureStatut
+  dueDate: string
   paidAt: string
 }
 
@@ -280,40 +484,30 @@ export interface PaymentReminder {
   template: string
 }
 
-export interface PaymentTimelineEntry {
-  id: Id
-  invoiceId: Id
-  type: 'invoice_sent' | 'reminder_sent' | 'payment_received' | 'overdue'
-  title: string
-  description: string
-  createdAt: string
-}
-
 // ---------- Documents ----------
 
 export type DocumentCategory = 'contract' | 'technical' | 'financial' | 'legal' | 'report' | 'other'
 
-export interface DocumentVersion {
-  id: Id
-  version: number
-  uploadedBy: string
-  uploadedAt: string
-  sizeKb: number
-  note?: string
-}
+// 'upload' = vrai fichier importé (module Documents, réellement stocké en
+// base). 'devis'/'facture' = PDF généré à la volée par les endpoints déjà
+// existants (/api/devis/<id>/pdf/, /api/factures/<id>/pdf/) — pas dupliqué
+// en base, juste affiché ici pour une bibliothèque documentaire unifiée.
+export type DocumentSource = 'upload' | 'devis' | 'facture'
 
 export interface AppDocument {
   id: Id
+  sourceId: Id
+  source: DocumentSource
   name: string
   category: DocumentCategory
-  fileType: 'pdf' | 'docx' | 'xlsx' | 'png' | 'jpg' | 'dwg' | 'zip'
-  sizeKb: number
-  relatedTo?: string
+  fileType: string
+  sizeKb: number | null
+  relatedTo: string | null
   ownerName: string
-  uploadedAt: string
-  updatedAt: string
-  versions: DocumentVersion[]
-  tags: string[]
+  createdAt: string
+  // URL directe du fichier réel — seulement pour source === 'upload'. Pour
+  // 'devis'/'facture', le téléchargement passe par documentsService.downloadPdf().
+  downloadUrl: string | null
 }
 
 // ---------- Notifications ----------
@@ -354,14 +548,13 @@ export interface KpiSummary {
   label: string
   value: number
   format: 'currency' | 'number' | 'percent'
-  deltaPct: number
-  trend: 'up' | 'down' | 'flat'
+  deltaPct?: number
+  trend?: 'up' | 'down' | 'flat'
 }
 
 export interface RevenuePoint {
   month: string
   revenue: number
-  target: number
 }
 
 export interface UpcomingDeadline {
