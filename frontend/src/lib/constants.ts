@@ -1,7 +1,8 @@
 export const COMPANY_NAME = 'A&K conseil et ingénierie'
 
-// Base URL of the real Django backend (authentication only, for now).
-export const API_BASE_URL = 'http://127.0.0.1:8000'
+// Base URL of the real Django backend. Configured via VITE_API_URL
+// (see .env.example) — never hardcode a deployment URL here.
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
 export const CURRENCY = 'EUR'
 
