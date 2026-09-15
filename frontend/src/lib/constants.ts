@@ -2,7 +2,9 @@ export const COMPANY_NAME = 'A&K conseil et ingénierie'
 
 // Base URL of the real Django backend. Configured via VITE_API_URL
 // (see .env.example) — never hardcode a deployment URL here.
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+// Trailing slash(es) stripped defensively: a misconfigured env var with
+// a trailing "/" would otherwise produce "//api/..." and 404 on Django.
+export const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/+$/, '')
 
 export const CURRENCY = 'EUR'
 
