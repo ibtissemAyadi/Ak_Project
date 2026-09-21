@@ -1,6 +1,18 @@
 from rest_framework.permissions import BasePermission
 
 
+def utilisateur_a_permission(user, module, action) -> bool:
+    """Même règle que HasModulePermission, réutilisable hors contexte DRF
+    (ex. outils du copilot IA) : un utilisateur ne peut jamais obtenir, via
+    un outil, un accès qu'il n'aurait pas via l'interface normale."""
+    if not user or not user.is_authenticated:
+        return False
+    role = getattr(user, 'role', None)
+    if role is None:
+        return False
+    return bool(role.permissions.get(module, {}).get(action, False))
+
+
 class HasModulePermission(BasePermission):
     """Vérifie la matrice de permissions du rôle de l'utilisateur connecté.
 
@@ -44,8 +56,4 @@ class HasModulePermission(BasePermission):
         if not module or not action:
             return False
 
-        role = getattr(user, 'role', None)
-        if role is None:
-            return False
-
-        return bool(role.permissions.get(module, {}).get(action, False))
+        return utilisateur_a_permission(user, module, action)

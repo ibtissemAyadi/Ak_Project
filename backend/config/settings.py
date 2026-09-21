@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'factures',
     'activites',
     'documents',
+    'assistant',
 ]
 
 MIDDLEWARE = [
@@ -187,3 +188,9 @@ STORAGES = {
 # Fichiers uploadés (pièces jointes d'affaire — bons de commande, etc.).
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Copilot IA (assistant/) — clé obtenue gratuitement sur aistudio.google.com/apikey,
+# jamais en dur. Vide par défaut : l'endpoint répond 503 plutôt que de planter
+# si elle n'est pas encore configurée.
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+GEMINI_MODEL = config('GEMINI_MODEL', default='gemini-flash-latest')

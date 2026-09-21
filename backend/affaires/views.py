@@ -1,15 +1,9 @@
-from collections import defaultdict
-from decimal import Decimal
-
-from django.db.models import Sum
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from activites.models import Activite
-from factures.models import STATUT_PAYEE
 from utilisateurs.permissions import HasModulePermission
 
 from .models import Affaire, CommentaireAffaire, PieceJointeAffaire
@@ -20,6 +14,7 @@ from .serializers import (
     CommentaireAffaireSerializer,
     PieceJointeAffaireSerializer,
 )
+from .services import calculer_montant_en_attente, calculer_prevision_revenus
 
 
 class AffaireListView(generics.ListAPIView):
@@ -35,11 +30,6 @@ class AffaireListView(generics.ListAPIView):
 
     def get_queryset(self):
         return Affaire.objects.all().select_related('client', 'charge_affaires', 'devis')
-
-
-def _premier_du_mois_suivant(date, nb_mois):
-    mois_total = date.month - 1 + nb_mois
-    return date.replace(year=date.year + mois_total // 12, month=mois_total % 12 + 1, day=1)
 
 
 class AffairePrevisionRevenusView(APIView):
@@ -61,27 +51,8 @@ class AffairePrevisionRevenusView(APIView):
             nb_mois = int(request.query_params.get('mois', 12))
         except (TypeError, ValueError):
             nb_mois = 12
-        nb_mois = max(1, min(nb_mois, 24))
 
-        premier_mois = timezone.localdate().replace(day=1)
-
-        queryset = Affaire.objects.filter(date_fin_reelle__isnull=True, date_fin_prevue__gte=premier_mois)
-        charge_affaires_id = request.query_params.get('charge_affaires')
-        if charge_affaires_id:
-            queryset = queryset.filter(charge_affaires_id=charge_affaires_id)
-
-        totaux_par_mois = defaultdict(Decimal)
-        affaires = queryset.values('date_fin_prevue', 'budget')
-        for affaire in affaires:
-            cle = affaire['date_fin_prevue'].strftime('%Y-%m')
-            totaux_par_mois[cle] += affaire['budget']
-
-        resultat = []
-        for i in range(nb_mois):
-            debut_mois = _premier_du_mois_suivant(premier_mois, i)
-            cle = debut_mois.strftime('%Y-%m')
-            resultat.append({'mois': cle, 'montant_prevu': totaux_par_mois.get(cle, Decimal('0'))})
-
+        resultat = calculer_prevision_revenus(nb_mois, request.query_params.get('charge_affaires'))
         return Response(resultat)
 
 
@@ -96,12 +67,7 @@ class AffaireMontantEnAttenteView(APIView):
     permission_module = 'affaires'
 
     def get(self, request):
-        queryset = Affaire.objects.exclude(facture__statut=STATUT_PAYEE)
-        charge_affaires_id = request.query_params.get('charge_affaires')
-        if charge_affaires_id:
-            queryset = queryset.filter(charge_affaires_id=charge_affaires_id)
-
-        total = queryset.aggregate(total=Sum('budget'))['total'] or Decimal('0')
+        total = calculer_montant_en_attente(request.query_params.get('charge_affaires'))
         return Response({'montant_en_attente': total})
 
 

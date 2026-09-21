@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { formatRelativeTime } from '@/lib/formatters'
-import { SUGGESTED_PROMPTS } from '@/mocks/data/chat'
+import { SUGGESTED_PROMPTS } from '@/features/ai-assistant/suggested-prompts'
 import { chatService } from '@/services/chat-service'
 import type { ChatConversation } from '@/types'
 

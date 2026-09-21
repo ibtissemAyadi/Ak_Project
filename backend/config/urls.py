@@ -33,6 +33,7 @@ urlpatterns = [
     path('api/factures/', include('factures.urls')),
     path('api/activites/', include('activites.urls')),
     path('api/documents/', include('documents.urls')),
+    path('api/assistant/', include('assistant.urls')),
     path('api/permissions/<str:module>/', ModuleAccessCheckView.as_view(), name='permission-check'),
 ]
 
