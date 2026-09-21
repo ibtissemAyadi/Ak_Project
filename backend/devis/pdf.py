@@ -192,15 +192,18 @@ def _tableau_lignes(devis):
 
 
 def _tableau_totaux(devis):
-    # Ni marge, ni remise, ni TVA détaillées dans le PDF généré : la marge et
-    # la remise sont déjà réparties dans le prix de chaque ligne (voir
-    # _facteur_marge), donc ce "Sous-total" est le montant HT une fois ces
-    # ajustements intégrés — pas le sous-total brut des lignes avant marge.
-    # Ces montants restent visibles/modifiables séparément dans l'application,
-    # simplement pas détaillés sur ce document destiné au client.
+    # Ni marge, ni remise détaillées dans le PDF généré : elles sont déjà
+    # réparties dans le prix de chaque ligne (voir _facteur_marge), donc ce
+    # "Total HT" est le montant HT une fois ces ajustements intégrés — pas le
+    # sous-total brut des lignes avant marge. Ces montants restent
+    # visibles/modifiables séparément dans l'application, simplement pas
+    # détaillés sur ce document destiné au client. En revanche le HT et le
+    # TTC sont tous deux explicitement nommés et mis en avant (pas de
+    # "Sous-total" ambigu) — le client doit voir clairement les deux, même
+    # quand ils sont égaux (TVA à 0).
     lignes = [
-        ('Sous-total', formater_montant(devis.montant_ht), False),
-        ('Total', formater_montant(devis.montant_ttc), True),
+        ('Total HT', formater_montant(devis.montant_ht), False),
+        ('Total TTC', formater_montant(devis.montant_ttc), True),
     ]
     data = []
     style_cmds = [
@@ -211,14 +214,16 @@ def _tableau_totaux(devis):
         ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
     ]
     for i, (label, valeur, accent) in enumerate(lignes):
-        style_label = style_bold if accent else style_muted
-        style_valeur = style_droite if accent else style_droite_muted
+        # Les deux lignes sont en gras (navy) — seule la mise en fond/taille
+        # distingue le TTC comme montant final, le HT reste tout aussi lisible.
+        style_label = style_bold
+        style_valeur = style_droite if accent else ParagraphStyle('htV', parent=style_droite, fontName=style_bold.fontName)
         data.append([Paragraph(label, style_label), Paragraph(valeur, style_valeur)])
         if accent:
             style_cmds.append(('LINEABOVE', (0, i), (-1, i), 0.75, COULEUR_BORDURE))
 
-    # Total final mis en évidence
-    data[-1][0] = Paragraph('<b>Total</b>', ParagraphStyle('totL', parent=style_bold, fontSize=11.5))
+    # Total TTC mis en évidence (montant final à payer)
+    data[-1][0] = Paragraph('<b>Total TTC</b>', ParagraphStyle('totL', parent=style_bold, fontSize=11.5))
     data[-1][1] = Paragraph(f'<b>{lignes[-1][1]}</b>', ParagraphStyle('totV', parent=style_droite, fontSize=11.5))
     style_cmds.append(('BACKGROUND', (0, len(lignes) - 1), (-1, len(lignes) - 1), COULEUR_FOND_TOTAL))
     style_cmds.append(('TOPPADDING', (0, len(lignes) - 1), (-1, len(lignes) - 1), 8))
