@@ -70,11 +70,14 @@ class AssistantChatView(APIView):
                     tools=construire_outils(request.user),
                 ),
             )
+            # .text peut lever (réponse bloquée, plusieurs candidats, tour se
+            # terminant sur un appel d'outil sans partie texte...) — protégé
+            # par le même try/except que l'appel réseau plutôt que de laisser
+            # remonter une erreur 500 brute.
+            texte = (response.text or '').strip() or "Désolé, je n'ai pas pu formuler de réponse."
         except Exception:
             logger.exception('Erreur lors de l\'appel au copilot IA (Gemini)')
             return Response({'detail': 'Le copilot IA est momentanément indisponible. Réessayez.'}, status=502)
-
-        texte = (response.text or '').strip() or "Désolé, je n'ai pas pu formuler de réponse."
 
         nouvel_historique = [
             *historique,
