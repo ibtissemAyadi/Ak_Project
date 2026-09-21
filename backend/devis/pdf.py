@@ -205,10 +205,22 @@ def _style_tableau_lignes(nb_lignes, colonnes_droite):
     return TableStyle(style)
 
 
+def _facteur_marge(devis) -> Decimal:
+    """Ratio à appliquer au prix/montant de chaque ligne pour que le prix
+    affiché sur le PDF intègre déjà la marge et la remise du devis (au lieu
+    de les laisser en ajustement global invisible, qui produit un écart
+    inexpliqué entre "Sous-total" et "Total" sur le document client)."""
+    if not devis.sous_total:
+        return Decimal('1')
+    return devis.montant_ht / devis.sous_total
+
+
 def _tableau_lignes(devis):
     lignes = list(devis.lignes.all())
     if not lignes:
         return Paragraph('Aucune ligne.', style_muted)
+
+    facteur = _facteur_marge(devis)
 
     style_titre_projet = ParagraphStyle(
         'TitreProjetLignes', parent=style_normal, fontName='Helvetica-Bold',
@@ -224,11 +236,13 @@ def _tableau_lignes(devis):
         [Paragraph(devis.objet or 'Prestation', style_titre_projet), '—', '—', '—'],
     ]
     for l in lignes:
+        prix_affiche = (l.prix_unitaire * facteur).quantize(Decimal('0.01')) if l.prix_unitaire is not None else None
+        montant_affiche = (l.montant * facteur).quantize(Decimal('0.01'))
         data.append([
             Paragraph(l.description, style_normal),
             Paragraph(formater_nombre(l.quantite) if l.quantite is not None else '—', style_droite),
-            Paragraph(formater_montant(l.prix_unitaire) if l.prix_unitaire is not None else '—', style_droite),
-            Paragraph(formater_montant(l.montant), style_droite),
+            Paragraph(formater_montant(prix_affiche) if prix_affiche is not None else '—', style_droite),
+            Paragraph(formater_montant(montant_affiche), style_droite),
         ])
     table = Table(data, colWidths=[7.4 * cm, 2.2 * cm, 3.4 * cm, 3.6 * cm], repeatRows=2)
     table.setStyle(_style_tableau_lignes(len(lignes), colonnes_droite=[1, 2, 3]))
@@ -236,11 +250,14 @@ def _tableau_lignes(devis):
 
 
 def _tableau_totaux(devis):
-    # Ni marge, ni remise, ni TVA détaillées dans le PDF généré — seulement
-    # le sous-total et le total final (ces ajustements restent visibles et
-    # modifiables dans l'application, mais pas sur ce document).
+    # Ni marge, ni remise, ni TVA détaillées dans le PDF généré : la marge et
+    # la remise sont déjà réparties dans le prix de chaque ligne (voir
+    # _facteur_marge), donc ce "Sous-total" est le montant HT une fois ces
+    # ajustements intégrés — pas le sous-total brut des lignes avant marge.
+    # Ces montants restent visibles/modifiables séparément dans l'application,
+    # simplement pas détaillés sur ce document destiné au client.
     lignes = [
-        ('Sous-total', formater_montant(devis.sous_total), False),
+        ('Sous-total', formater_montant(devis.montant_ht), False),
         ('Total', formater_montant(devis.montant_ttc), True),
     ]
     data = []
