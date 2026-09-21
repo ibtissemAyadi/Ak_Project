@@ -1,21 +1,17 @@
-"""Génération du PDF d'une facture — même moteur (reportlab) et même style
-visuel que le devis (backend/devis/pdf.py), avec la structure propre à une
-facture : bloc TVA société, informations de paiement, coordonnées bancaires.
+"""Génération du PDF d'une facture — même moteur (reportlab) et même thème
+visuel que le devis (voir backend/devis/pdf_theme.py), avec la structure
+propre à une facture : bloc TVA société, informations de paiement,
+coordonnées bancaires.
 
 Les montants proviennent exclusivement des champs stockés par
 Facture.recalculer_montants() — ce module ne fait que les mettre en forme."""
 
 import io
-from decimal import Decimal
-
-from django.conf import settings
 
 from PIL import Image as PILImage
 
-from reportlab.lib import colors
-from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import (
     HRFlowable,
@@ -28,63 +24,41 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from .models import MODE_REGLEMENT_CHOICES
+from devis.pdf_theme import (
+    COMPANY_ADDRESS,
+    COMPANY_EMAIL,
+    COMPANY_NAME_CONTACT,
+    COMPANY_VAT_ID,
+    COULEUR_BORDURE,
+    COULEUR_FOND_ALT,
+    COULEUR_FOND_TOTAL,
+    COULEUR_PRINCIPALE,
+    COULEUR_TEXTE_ATTENUE,
+    FONT_BOLD,
+    FONT_REGULAR,
+    LOGO_PATH,
+    entete_tableau,
+    formater_date_longue,
+    formater_montant,
+    formater_nombre,
+    style_a_client,
+    style_bold,
+    style_champ_droite,
+    style_droite,
+    style_droite_muted,
+    style_muted,
+    style_normal,
+    style_section,
+    style_titre,
+)
 
-COMPANY_NAME_CONTACT = 'A and K CONSEIL ET INGENIERIE'
-COMPANY_ADDRESS = '13 rue Ali Belhouane, La Soukra, 2036 Ariana – Tunisie'
-COMPANY_VAT_ID = '1931449T/A/M/000'
-COMPANY_EMAIL = 'contact@ak-ingenierie.fr'
-LOGO_PATH = settings.BASE_DIR / 'devis' / 'assets' / 'ak_logo.png'
+from .models import MODE_REGLEMENT_CHOICES
 
 BANQUE_NOM = 'UIB – Union Internationale de Banque'
 BANQUE_IBAN = 'TN59 12 206 00 00055002674 77'
 BANQUE_BIC = 'UIBKTNTT'
 
-COULEUR_PRINCIPALE = colors.HexColor('#1F3B57')
-COULEUR_TEXTE_ATTENUE = colors.HexColor('#5B5B5B')
-COULEUR_BORDURE = colors.HexColor('#D8DEE4')
-COULEUR_FOND_TOTAL = colors.HexColor('#EEF3F7')
-COULEUR_FOND_ALT = colors.HexColor('#F7F9FB')
-
-MOIS_FR = [
-    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
-]
-
 MODE_REGLEMENT_LABELS = dict(MODE_REGLEMENT_CHOICES)
-
-styles = getSampleStyleSheet()
-
-style_titre = ParagraphStyle('FactureTitre', parent=styles['Heading1'], fontSize=22, leading=26, textColor=COULEUR_PRINCIPALE, spaceAfter=0)
-style_section = ParagraphStyle('FactureSection', parent=styles['Heading3'], fontSize=11, leading=14, textColor=COULEUR_PRINCIPALE, spaceBefore=4, spaceAfter=6)
-style_normal = ParagraphStyle('FactureNormal', parent=styles['Normal'], fontSize=9.5, leading=13)
-style_muted = ParagraphStyle('FactureMuted', parent=style_normal, textColor=COULEUR_TEXTE_ATTENUE)
-style_bold = ParagraphStyle('FactureBold', parent=style_normal, fontName='Helvetica-Bold')
-style_droite = ParagraphStyle('FactureDroite', parent=style_normal, alignment=TA_RIGHT)
-style_droite_muted = ParagraphStyle('FactureDroiteMuted', parent=style_droite, textColor=COULEUR_TEXTE_ATTENUE)
-style_champ_droite = ParagraphStyle('FactureChampDroite', parent=style_droite, textColor=COULEUR_PRINCIPALE, fontName='Helvetica-Bold', spaceAfter=3)
-style_a_client = ParagraphStyle('FactureAClient', parent=style_bold, textColor=COULEUR_PRINCIPALE, fontSize=10.5)
-
-
-def formater_montant(valeur) -> str:
-    q = Decimal(valeur).quantize(Decimal('0.01'))
-    negatif = q < 0
-    entier, decimales = f'{abs(q):.2f}'.split('.')
-    groupes = []
-    while len(entier) > 3:
-        groupes.insert(0, entier[-3:])
-        entier = entier[:-3]
-    groupes.insert(0, entier)
-    return ('-' if negatif else '') + ' '.join(groupes) + ',' + decimales + ' €'
-
-
-def formater_nombre(valeur, decimales=2) -> str:
-    q = Decimal(valeur).quantize(Decimal('1.' + '0' * decimales))
-    return f'{q:.{decimales}f}'.replace('.', ',')
-
-
-def formater_date_longue(d) -> str:
-    return f'{d.day} {MOIS_FR[d.month - 1]} {d.year}' if d else '—'
 
 
 def _en_tete():
@@ -134,10 +108,6 @@ def _bloc_client(facture):
     return elements
 
 
-def _entete_tableau(cellules):
-    return [Paragraph(f'<b>{c}</b>', ParagraphStyle('th', parent=style_normal, textColor=colors.white, fontSize=9)) for c in cellules]
-
-
 def _style_tableau_lignes(nb_lignes, colonnes_droite):
     style = [
         ('BACKGROUND', (0, 0), (-1, 0), COULEUR_PRINCIPALE),
@@ -170,15 +140,14 @@ def _tableau_prestations(facture):
     if not lignes:
         return Paragraph('Aucune ligne.', style_muted)
 
-    style_titre_projet = ParagraphStyle('TitreProjetPrestations', parent=style_normal, fontName='Helvetica-Bold')
     objet = facture.affaire.devis.objet
     # La première ligne du tableau (sous l'en-tête des colonnes) porte le
     # titre du projet facturé, dans la même structure de colonnes que les
     # lignes de prestation qui suivent — pas une bannière fusionnée à part.
     data = [
         # Ordre demandé : Quantité, Description, Prix unitaire, Total.
-        _entete_tableau(['Quantité', 'Description', 'Prix unitaire', 'Total']),
-        ['—', Paragraph(objet or 'Prestation', style_titre_projet), '—', '—'],
+        entete_tableau(['Quantité', 'Description', 'Prix unitaire', 'Total']),
+        ['—', Paragraph(objet or 'Prestation', style_bold), '—', '—'],
     ]
     for l in lignes:
         data.append([
@@ -280,10 +249,10 @@ def _pied_de_page():
         canvas.saveState()
         canvas.setStrokeColor(COULEUR_BORDURE)
         canvas.line(2 * cm, 1.7 * cm, A4[0] - 2 * cm, 1.7 * cm)
-        canvas.setFont('Helvetica-Bold', 8)
+        canvas.setFont(FONT_BOLD, 8)
         canvas.setFillColor(COULEUR_PRINCIPALE)
         canvas.drawCentredString(A4[0] / 2, 1.35 * cm, 'Nous vous remercions de votre confiance !')
-        canvas.setFont('Helvetica', 7.5)
+        canvas.setFont(FONT_REGULAR, 7.5)
         canvas.setFillColor(COULEUR_TEXTE_ATTENUE)
         canvas.drawCentredString(A4[0] / 2, 1.05 * cm, f'{COMPANY_NAME_CONTACT}  {COMPANY_ADDRESS}')
         canvas.drawRightString(A4[0] - 2 * cm, 1.35 * cm, f'Page {doc.page}')

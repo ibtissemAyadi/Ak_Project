@@ -6,21 +6,20 @@
   montants.
   Page 2 — Conditions générales de vente (CGV), texte juridique fixe.
 
+Même thème visuel (palette, police, formatage) que le PDF facture — voir
+pdf_theme.py, point de vérité unique pour que les deux documents restent
+cohérents.
+
 Les montants affichés proviennent exclusivement des champs déjà calculés et
 stockés par Devis.recalculer_montants() : ce module ne refait aucun calcul
-de fond, il se contente de mettre en forme les valeurs (y compris la TVA par
-ligne, dérivée du taux unique du devis) — évite toute divergence avec les
-montants affichés dans l'application."""
+de fond, il se contente de mettre en forme les valeurs — évite toute
+divergence avec les montants affichés dans l'application."""
 
 import io
 from decimal import Decimal
 
-from django.conf import settings
-
-from reportlab.lib import colors
-from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import (
     HRFlowable,
@@ -33,89 +32,37 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-COMPANY_NAME_FOOTER = 'A AND K CONSEIL ET INGENIERIE'
-COMPANY_NAME_CONTACT = 'A and K CONSEIL ET INGENIERIE'
-COMPANY_ADDRESS = '13 rue Ali Belhouane , la Soukra, 2036  Ariana-Tunisie'
-COMPANY_PHONE = '(+216)22901127'
-COMPANY_EMAIL = 'contact@ak-ingenierie.fr'
-LOGO_PATH = settings.BASE_DIR / 'devis' / 'assets' / 'ak_logo.png'
-
-COULEUR_PRINCIPALE = colors.HexColor('#1F3B57')
-COULEUR_ACCENT = colors.HexColor('#4A7BA6')
-COULEUR_ADRESSE = colors.HexColor('#D97B4A')
-COULEUR_EMAIL = colors.HexColor('#1F6FEB')
-COULEUR_TEXTE_ATTENUE = colors.HexColor('#5B5B5B')
-COULEUR_BORDURE = colors.HexColor('#D8DEE4')
-COULEUR_FOND_TOTAL = colors.HexColor('#EEF3F7')
-
-MOIS_FR = [
-    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
-]
-
-styles = getSampleStyleSheet()
-
-style_titre = ParagraphStyle(
-    'DevisTitre', parent=styles['Heading1'], fontSize=22, leading=26,
-    textColor=COULEUR_PRINCIPALE, spaceAfter=0,
+from .pdf_theme import (
+    COMPANY_ADDRESS,
+    COMPANY_EMAIL,
+    COMPANY_NAME_CONTACT,
+    COMPANY_NAME_FOOTER,
+    COMPANY_PHONE,
+    COULEUR_BORDURE,
+    COULEUR_FOND_ALT,
+    COULEUR_FOND_TOTAL,
+    COULEUR_PRINCIPALE,
+    COULEUR_TEXTE_ATTENUE,
+    FONT_BOLD,
+    FONT_REGULAR,
+    LOGO_PATH,
+    entete_tableau,
+    formater_date_longue,
+    formater_montant,
+    formater_nombre,
+    style_a_client,
+    style_bold,
+    style_cgv_body,
+    style_cgv_heading,
+    style_champ_droite,
+    style_droite,
+    style_droite_muted,
+    style_muted,
+    style_normal,
+    style_section,
+    style_titre,
+    style_titre_page,
 )
-style_titre_page = ParagraphStyle(
-    'PageTitre', parent=styles['Heading1'], fontSize=16, leading=20,
-    textColor=COULEUR_PRINCIPALE, spaceBefore=4, spaceAfter=10,
-)
-style_section = ParagraphStyle(
-    'DevisSection', parent=styles['Heading3'], fontSize=11, leading=14,
-    textColor=COULEUR_PRINCIPALE, spaceBefore=4, spaceAfter=6,
-)
-style_cgv_heading = ParagraphStyle(
-    'CgvHeading', parent=styles['Heading3'], fontSize=10, leading=13,
-    textColor=COULEUR_PRINCIPALE, spaceBefore=10, spaceAfter=3,
-)
-style_normal = ParagraphStyle('DevisNormal', parent=styles['Normal'], fontSize=9.5, leading=13)
-style_cgv_body = ParagraphStyle(
-    'CgvBody', parent=styles['Normal'], fontSize=8.5, leading=12.5,
-    textColor=COULEUR_TEXTE_ATTENUE, spaceAfter=4, alignment=4,  # 4 = justify
-)
-style_muted = ParagraphStyle('DevisMuted', parent=style_normal, textColor=COULEUR_TEXTE_ATTENUE)
-style_bold = ParagraphStyle('DevisBold', parent=style_normal, fontName='Helvetica-Bold')
-style_droite = ParagraphStyle('DevisDroite', parent=style_normal, alignment=TA_RIGHT)
-style_droite_muted = ParagraphStyle('DevisDroiteMuted', parent=style_droite, textColor=COULEUR_TEXTE_ATTENUE)
-
-style_contact_nom = ParagraphStyle('ContactNom', parent=style_bold, textColor=COULEUR_PRINCIPALE, fontSize=10)
-style_contact_adresse = ParagraphStyle('ContactAdresse', parent=style_normal, textColor=COULEUR_ADRESSE)
-style_contact_email = ParagraphStyle('ContactEmail', parent=style_normal, textColor=COULEUR_EMAIL)
-style_champ_droite = ParagraphStyle('ChampDroite', parent=style_droite, textColor=COULEUR_PRINCIPALE, spaceAfter=3)
-style_a_client = ParagraphStyle('AClient', parent=style_bold, textColor=COULEUR_PRINCIPALE, fontSize=10.5)
-
-
-def formater_montant(valeur) -> str:
-    """1234.5 -> '1 234,50 €' (espace comme séparateur de milliers, virgule
-    décimale — convention française, cohérente avec le formatage du frontend)."""
-    q = Decimal(valeur).quantize(Decimal('0.01'))
-    negatif = q < 0
-    entier, decimales = f'{abs(q):.2f}'.split('.')
-    groupes = []
-    while len(entier) > 3:
-        groupes.insert(0, entier[-3:])
-        entier = entier[:-3]
-    groupes.insert(0, entier)
-    return ('-' if negatif else '') + ' '.join(groupes) + ',' + decimales + ' €'
-
-
-def formater_nombre(valeur, decimales=2) -> str:
-    """10.5 -> '10,50' — même convention (virgule décimale) que formater_montant,
-    pour les quantités/pourcentages affichés sans symbole €."""
-    q = Decimal(valeur).quantize(Decimal('1.' + '0' * decimales))
-    return f'{q:.{decimales}f}'.replace('.', ',')
-
-
-def formater_date(d) -> str:
-    return d.strftime('%d/%m/%Y') if d else '—'
-
-
-def formater_date_longue(d) -> str:
-    """13/08/2026 -> '13 août 2026'."""
-    return f'{d.day} {MOIS_FR[d.month - 1]} {d.year}' if d else '—'
 
 
 def _en_tete(devis):
@@ -139,12 +86,14 @@ def _en_tete(devis):
 
 def _bloc_contact_devis(devis):
     """Bloc sous le bandeau : coordonnées société à gauche, Date / N° de
-    devis / Référence client à droite."""
+    devis / Référence client à droite. Même traitement que le bloc
+    équivalent de la facture (nom en gras, reste en gris atténué) — pas de
+    couleurs d'accent secondaires."""
     colonne_gauche = [
-        Paragraph(COMPANY_NAME_CONTACT, style_contact_nom),
-        Paragraph(COMPANY_ADDRESS, style_contact_adresse),
-        Paragraph(COMPANY_PHONE, style_contact_adresse),
-        Paragraph(COMPANY_EMAIL, style_contact_email),
+        Paragraph(COMPANY_NAME_CONTACT, style_bold),
+        Paragraph(COMPANY_ADDRESS, style_muted),
+        Paragraph(COMPANY_PHONE, style_muted),
+        Paragraph(COMPANY_EMAIL, style_muted),
     ]
     colonne_droite = [
         Paragraph(f'<b>Date :</b> {formater_date_longue(devis.date_creation)}', style_champ_droite),
@@ -174,10 +123,6 @@ def _bloc_client(devis):
     return elements
 
 
-def _entete_tableau(cellules):
-    return [Paragraph(f'<b>{c}</b>', ParagraphStyle('th', parent=style_normal, textColor=colors.white, fontSize=9)) for c in cellules]
-
-
 def _style_tableau_lignes(nb_lignes, colonnes_droite):
     style = [
         ('BACKGROUND', (0, 0), (-1, 0), COULEUR_PRINCIPALE),
@@ -201,7 +146,7 @@ def _style_tableau_lignes(nb_lignes, colonnes_droite):
         style.append(('ALIGN', (col, 0), (col, -1), 'RIGHT'))
     for i in range(2, nb_lignes + 2):
         if i % 2 == 0:
-            style.append(('BACKGROUND', (0, i), (-1, i), colors.HexColor('#F7F9FB')))
+            style.append(('BACKGROUND', (0, i), (-1, i), COULEUR_FOND_ALT))
     return TableStyle(style)
 
 
@@ -222,9 +167,6 @@ def _tableau_lignes(devis):
 
     facteur = _facteur_marge(devis)
 
-    style_titre_projet = ParagraphStyle(
-        'TitreProjetLignes', parent=style_normal, fontName='Helvetica-Bold',
-    )
     # La première ligne du tableau (sous l'en-tête des colonnes) porte le
     # titre du projet, dans la même structure de colonnes que les lignes de
     # prestation qui suivent — pas une bannière fusionnée à part.
@@ -232,8 +174,8 @@ def _tableau_lignes(devis):
     # TVA (voir _tableau_totaux) — juste la description, quantité, prix et
     # total de chaque ligne.
     data = [
-        _entete_tableau(['Description', 'Quantité', 'Prix', 'Total']),
-        [Paragraph(devis.objet or 'Prestation', style_titre_projet), '—', '—', '—'],
+        entete_tableau(['Description', 'Quantité', 'Prix', 'Total']),
+        [Paragraph(devis.objet or 'Prestation', style_bold), '—', '—', '—'],
     ]
     for l in lignes:
         prix_affiche = (l.prix_unitaire * facteur).quantize(Decimal('0.01')) if l.prix_unitaire is not None else None
@@ -276,8 +218,8 @@ def _tableau_totaux(devis):
             style_cmds.append(('LINEABOVE', (0, i), (-1, i), 0.75, COULEUR_BORDURE))
 
     # Total final mis en évidence
-    data[-1][0] = Paragraph('<b>Total</b>', ParagraphStyle('totL', parent=style_bold, fontSize=12))
-    data[-1][1] = Paragraph(f'<b>{lignes[-1][1]}</b>', ParagraphStyle('totV', parent=style_droite, fontSize=12))
+    data[-1][0] = Paragraph('<b>Total</b>', ParagraphStyle('totL', parent=style_bold, fontSize=11.5))
+    data[-1][1] = Paragraph(f'<b>{lignes[-1][1]}</b>', ParagraphStyle('totV', parent=style_droite, fontSize=11.5))
     style_cmds.append(('BACKGROUND', (0, len(lignes) - 1), (-1, len(lignes) - 1), COULEUR_FOND_TOTAL))
     style_cmds.append(('TOPPADDING', (0, len(lignes) - 1), (-1, len(lignes) - 1), 8))
     style_cmds.append(('BOTTOMPADDING', (0, len(lignes) - 1), (-1, len(lignes) - 1), 8))
@@ -421,10 +363,10 @@ def _pied_de_page(devis):
         canvas.saveState()
         canvas.setStrokeColor(COULEUR_BORDURE)
         canvas.line(2 * cm, 1.7 * cm, A4[0] - 2 * cm, 1.7 * cm)
-        canvas.setFont('Helvetica-Bold', 8)
+        canvas.setFont(FONT_BOLD, 8)
         canvas.setFillColor(COULEUR_PRINCIPALE)
         canvas.drawCentredString(A4[0] / 2, 1.35 * cm, 'Nous vous remercions de votre confiance !')
-        canvas.setFont('Helvetica', 7.5)
+        canvas.setFont(FONT_REGULAR, 7.5)
         canvas.setFillColor(COULEUR_TEXTE_ATTENUE)
         canvas.drawCentredString(A4[0] / 2, 1.05 * cm, f'{COMPANY_NAME_FOOTER}  {COMPANY_ADDRESS}')
         canvas.drawRightString(A4[0] - 2 * cm, 1.35 * cm, f'Page {doc.page}')
