@@ -13,8 +13,6 @@ brouillon proposé (jamais ce que le modèle a pu reformuler)."""
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
-from django.core.exceptions import ValidationError
-
 from affaires.services import calculer_montant_en_attente, calculer_prevision_revenus, lister_affaires_a_risque
 from crm.models import Client
 from devis.models import STATUT_CHOICES as DEVIS_STATUT_CHOICES
@@ -166,6 +164,10 @@ def construire_outils(user):
             f'Brouillon de devis de {formater_montant(montant)} HT pour {client.raison_sociale} — "{objet}".'
         )
 
+        # Une seule proposition en attente par utilisateur : "la dernière
+        # proposition" que confirmer_creation_devis exécute est ainsi sans
+        # ambiguïté, celle que l'utilisateur vient de voir.
+        PropositionAction.objects.filter(utilisateur=user, type_action='creation_devis', executee=False).delete()
         proposition = PropositionAction.objects.create(
             utilisateur=user,
             type_action='creation_devis',
@@ -183,30 +185,27 @@ def construire_outils(user):
             'instruction': "Présentez ce résumé à l'utilisateur et demandez-lui de confirmer avant d'appeler confirmer_creation_devis.",
         }
 
-    def confirmer_creation_devis(proposition_id: str) -> dict:
-        """Crée réellement le devis brouillon correspondant à une proposition
-        déjà présentée à l'utilisateur. N'appelez cet outil QUE si l'utilisateur
+    def confirmer_creation_devis() -> dict:
+        """Crée réellement le devis brouillon de la dernière proposition
+        présentée à l'utilisateur. N'appelez cet outil QUE si l'utilisateur
         vient de confirmer explicitement (ex. "oui", "confirmer", "vas-y") en
-        réponse à la proposition — jamais dans le même tour que
-        proposer_creation_devis.
-
-        Args:
-            proposition_id: L'identifiant de proposition renvoyé par proposer_creation_devis.
+        réponse à cette proposition — jamais dans le même tour que
+        proposer_creation_devis. Sans paramètre : la proposition confirmée est
+        toujours la dernière en attente de cet utilisateur, celle qu'il vient
+        de voir (l'historique de conversation ne conserve pas les identifiants).
         """
         if not utilisateur_a_permission(user, 'devis', 'creation'):
             return {'erreur': "Vous n'avez pas la permission de créer des devis."}
 
-        try:
-            proposition = PropositionAction.objects.get(
-                id_proposition=proposition_id, utilisateur=user, type_action='creation_devis',
-            )
-        except (PropositionAction.DoesNotExist, ValidationError):
-            return {'erreur': "Proposition introuvable ou invalide. Refaites une proposition avec proposer_creation_devis."}
-
-        if proposition.executee:
-            return {'erreur': 'Cette proposition a déjà été confirmée précédemment.'}
+        proposition = (
+            PropositionAction.objects.filter(utilisateur=user, type_action='creation_devis', executee=False)
+            .order_by('-date_creation')
+            .first()
+        )
+        if proposition is None:
+            return {'erreur': "Aucune proposition en attente. Faites d'abord une proposition avec proposer_creation_devis."}
         if datetime.now(proposition.date_creation.tzinfo) - proposition.date_creation > DUREE_VALIDITE_PROPOSITION:
-            return {'erreur': 'Cette proposition a expiré (plus de 30 minutes). Refaites une proposition.'}
+            return {'erreur': 'La dernière proposition a expiré (plus de 30 minutes). Refaites une proposition.'}
 
         payload = proposition.payload
         try:
@@ -241,3 +240,75 @@ def construire_outils(user):
         proposer_creation_devis,
         confirmer_creation_devis,
     ]
+
+
+def _outil(nom, description, proprietes=None, requis=None):
+    proprietes = proprietes or {}
+    requis = requis or []
+    # Les modèles envoient parfois null pour un paramètre optionnel : Groq
+    # valide les appels côté serveur et rejetterait ce null (400) si le schéma
+    # ne l'autorisait pas. Les null sont ignorés à l'exécution (voir views).
+    proprietes = {
+        cle: ({**prop, 'type': [prop['type'], 'null']} if cle not in requis else prop)
+        for cle, prop in proprietes.items()
+    }
+    return {
+        'type': 'function',
+        'function': {
+            'name': nom,
+            'description': description,
+            'parameters': {'type': 'object', 'properties': proprietes, 'required': requis},
+        },
+    }
+
+
+# Schémas au format function calling (OpenAI/Groq) — doivent rester alignés
+# avec les signatures des fonctions de construire_outils().
+TOOL_SCHEMAS = [
+    _outil(
+        'rechercher_client',
+        'Recherche un client par raison sociale (recherche partielle, insensible à la casse).',
+        {'nom': {'type': 'string', 'description': 'Tout ou partie du nom du client recherché.'}},
+        ['nom'],
+    ),
+    _outil(
+        'ca_previsionnel',
+        "Chiffre d'affaires prévisionnel réparti par mois, basé sur la date de fin prévue des affaires en cours.",
+        {'nombre_de_mois': {'type': 'integer', 'description': 'Nombre de mois à couvrir à partir du mois courant (1 à 24).'}},
+    ),
+    _outil(
+        'montant_en_attente',
+        'Montant total (en euros) encore à encaisser sur les affaires dont la facture n\'est pas payée.',
+    ),
+    _outil(
+        'affaires_a_risque',
+        "Affaires en cours déjà en retard sur leur date de fin prévue ou dont l'échéance approche.",
+        {'horizon_jours': {'type': 'integer', 'description': 'Fenêtre en jours pour considérer une échéance comme proche (ex. 14).'}},
+    ),
+    _outil(
+        'lister_devis',
+        'Liste les devis, éventuellement filtrés par statut.',
+        {'statut': {
+            'type': 'string',
+            'description': 'Statut (vide = tous) : Brouillon, En_preparation, A_valider, Envoye, Accepte, Refuse, Annule.',
+        }},
+    ),
+    _outil(
+        'proposer_creation_devis',
+        "Prépare SANS l'enregistrer un brouillon de devis pour un client existant et renvoie un identifiant de "
+        "proposition. Après cet appel, présente le résumé à l'utilisateur et demande-lui de confirmer.",
+        {
+            'client_nom': {'type': 'string', 'description': 'Raison sociale du client (doit exister).'},
+            'objet': {'type': 'string', 'description': 'Objet/titre du devis.'},
+            'montant_ht': {'type': 'number', 'description': 'Montant hors taxes en euros.'},
+            'description_prestation': {'type': 'string', 'description': "Description de la ligne (par défaut l'objet)."},
+        },
+        ['client_nom', 'objet', 'montant_ht'],
+    ),
+    _outil(
+        'confirmer_creation_devis',
+        "Crée réellement le devis de la dernière proposition présentée à l'utilisateur (aucun paramètre). "
+        "À n'appeler que si le dernier message de l'utilisateur confirme explicitement (ex. « oui », « confirme ») "
+        "une proposition déjà affichée dans la conversation, jamais dans le même tour que proposer_creation_devis.",
+    ),
+]

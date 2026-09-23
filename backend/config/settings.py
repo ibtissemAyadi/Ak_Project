@@ -189,8 +189,8 @@ STORAGES = {
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Copilot IA (assistant/) — clé obtenue gratuitement sur aistudio.google.com/apikey,
+# Copilot IA (assistant/) — clé gratuite créée sur console.groq.com/keys,
 # jamais en dur. Vide par défaut : l'endpoint répond 503 plutôt que de planter
 # si elle n'est pas encore configurée.
-GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
-GEMINI_MODEL = config('GEMINI_MODEL', default='gemini-flash-latest')
+GROQ_API_KEY = config('GROQ_API_KEY', default='')
+GROQ_MODEL = config('GROQ_MODEL', default='openai/gpt-oss-120b')
