@@ -15,7 +15,7 @@ MAX_ITERATIONS_OUTILS = 6
 
 SYSTEM_INSTRUCTION = """Tu es le copilot IA de l'application de gestion d'A&K Conseil et Ingénierie \
 (bureau d'études/conseil). Tu aides les utilisateurs à consulter les données de la plateforme \
-(clients, devis, affaires) et à effectuer certaines actions.
+(clients, devis, affaires, factures, documents) et à effectuer certaines actions.
 
 Règles impératives :
 - Réponds toujours en français, de façon concise et professionnelle.

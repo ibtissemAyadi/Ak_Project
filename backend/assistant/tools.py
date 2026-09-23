@@ -18,6 +18,10 @@ from crm.models import Client
 from devis.models import STATUT_CHOICES as DEVIS_STATUT_CHOICES
 from devis.models import Devis, LigneDevis
 from devis.pdf_theme import formater_montant
+from documents.models import CATEGORIE_CHOICES as DOCUMENT_CATEGORIE_CHOICES
+from documents.models import Document
+from factures.models import STATUT_CHOICES as FACTURE_STATUT_CHOICES
+from factures.models import Facture
 from utilisateurs.permissions import utilisateur_a_permission
 
 from .models import PropositionAction
@@ -130,6 +134,72 @@ def construire_outils(user):
             ],
         }
 
+    def lister_documents(categorie: str = '', recherche: str = '') -> dict:
+        """Liste les documents de la bibliothèque documentaire (fichiers importés).
+
+        Args:
+            categorie: Catégorie (vide = toutes) : contract, technical, financial, legal, report, other.
+            recherche: Mot-clé à chercher dans la désignation du document.
+        """
+        if not utilisateur_a_permission(user, 'documents', 'lecture'):
+            return {'erreur': "Vous n'avez pas la permission de consulter les documents."}
+
+        categories = dict(DOCUMENT_CATEGORIE_CHOICES)
+        queryset = Document.objects.all()
+        if categorie:
+            if categorie not in categories:
+                return {'erreur': f'Catégorie inconnue "{categorie}". Valeurs possibles : {", ".join(categories)}.'}
+            queryset = queryset.filter(categorie=categorie)
+        if recherche:
+            queryset = queryset.filter(designation__icontains=recherche)
+
+        total = queryset.count()
+        documents = list(queryset[:20])
+        return {
+            'nombre_total': total,
+            'documents': [
+                {
+                    'designation': d.designation,
+                    'categorie': categories.get(d.categorie, d.categorie),
+                    'lie_a': d.lie_a or None,
+                    'date_ajout': d.date_creation.date().isoformat(),
+                }
+                for d in documents
+            ],
+        }
+
+    def lister_factures(statut: str = '') -> dict:
+        """Liste les factures, éventuellement filtrées par statut.
+
+        Args:
+            statut: Statut (vide = toutes) : Brouillon, Envoyee, Payee, Partiellement_payee, En_retard, Annulee.
+        """
+        if not utilisateur_a_permission(user, 'factures', 'lecture'):
+            return {'erreur': "Vous n'avez pas la permission de consulter les factures."}
+
+        statuts_valides = dict(FACTURE_STATUT_CHOICES)
+        queryset = Facture.objects.select_related('affaire__client')
+        if statut:
+            if statut not in statuts_valides:
+                return {'erreur': f'Statut inconnu "{statut}". Valeurs possibles : {", ".join(statuts_valides)}.'}
+            queryset = queryset.filter(statut=statut)
+
+        total = queryset.count()
+        factures = list(queryset.order_by('-date_facture')[:20])
+        return {
+            'nombre_total': total,
+            'factures': [
+                {
+                    'numero': f.numero_facture,
+                    'client': f.affaire.client.raison_sociale,
+                    'statut': f.get_statut_display(),
+                    'montant_total_eur': float(f.montant_total),
+                    'date_echeance': f.date_echeance.isoformat() if f.date_echeance else None,
+                }
+                for f in factures
+            ],
+        }
+
     def proposer_creation_devis(client_nom: str, objet: str, montant_ht: float, description_prestation: str = '') -> dict:
         """Prépare (sans l'enregistrer) un brouillon de nouveau devis pour un
         client existant. NE crée PAS le devis — retourne un identifiant de
@@ -237,6 +307,8 @@ def construire_outils(user):
         montant_en_attente,
         affaires_a_risque,
         lister_devis,
+        lister_documents,
+        lister_factures,
         proposer_creation_devis,
         confirmer_creation_devis,
     ]
@@ -291,6 +363,25 @@ TOOL_SCHEMAS = [
         {'statut': {
             'type': 'string',
             'description': 'Statut (vide = tous) : Brouillon, En_preparation, A_valider, Envoye, Accepte, Refuse, Annule.',
+        }},
+    ),
+    _outil(
+        'lister_documents',
+        'Liste les documents de la bibliothèque documentaire (contrats, rapports, etc.), avec filtres optionnels.',
+        {
+            'categorie': {
+                'type': 'string',
+                'description': 'Catégorie (vide = toutes) : contract, technical, financial, legal, report, other.',
+            },
+            'recherche': {'type': 'string', 'description': 'Mot-clé à chercher dans la désignation.'},
+        },
+    ),
+    _outil(
+        'lister_factures',
+        'Liste les factures, éventuellement filtrées par statut.',
+        {'statut': {
+            'type': 'string',
+            'description': 'Statut (vide = toutes) : Brouillon, Envoyee, Payee, Partiellement_payee, En_retard, Annulee.',
         }},
     ),
     _outil(
