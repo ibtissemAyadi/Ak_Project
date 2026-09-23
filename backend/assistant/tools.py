@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
 from affaires.services import calculer_montant_en_attente, calculer_prevision_revenus, lister_affaires_a_risque
+from affaires.models import Affaire
 from crm.models import Client
 from devis.models import STATUT_CHOICES as DEVIS_STATUT_CHOICES
 from devis.models import Devis, LigneDevis
@@ -101,6 +102,47 @@ def construire_outils(user):
                     'avancement_pourcent': a['etat_avancement'],
                 }
                 for a in affaires
+            ],
+        }
+
+    def lister_affaires(etat: str = '') -> dict:
+        """Liste toutes les affaires (comme la page Affaires), avec leur
+        avancement, budget, heures et échéance. Pour les seules affaires en
+        retard ou proches de leur échéance, utiliser affaires_a_risque.
+
+        Args:
+            etat: "en_cours" (non terminées), "terminees", ou vide pour toutes.
+        """
+        if not utilisateur_a_permission(user, 'affaires', 'lecture'):
+            return {'erreur': "Vous n'avez pas la permission de consulter les affaires."}
+
+        if etat not in ('', 'en_cours', 'terminees'):
+            return {'erreur': 'État inconnu. Valeurs possibles : en_cours, terminees (ou vide pour toutes).'}
+
+        queryset = Affaire.objects.select_related('client', 'charge_affaires', 'devis')
+        if etat == 'en_cours':
+            queryset = queryset.filter(date_fin_reelle__isnull=True)
+        elif etat == 'terminees':
+            queryset = queryset.filter(date_fin_reelle__isnull=False)
+
+        total = queryset.count()
+        return {
+            'nombre_total': total,
+            'affaires': [
+                {
+                    'numero_affaire': a.numero_affaire,
+                    'objet': a.devis.objet,
+                    'client': a.client.raison_sociale,
+                    'charge_affaires': f'{a.charge_affaires.prenom} {a.charge_affaires.nom}',
+                    'avancement_pourcent': a.etat_avancement,
+                    'budget_eur': float(a.budget),
+                    'heures_consommees': float(a.heures_consommees),
+                    'heures_prevues': float(a.heures_prevues),
+                    'priorite': a.priorite,
+                    'date_fin_prevue': a.date_fin_prevue.isoformat() if a.date_fin_prevue else None,
+                    'terminee': a.date_fin_reelle is not None,
+                }
+                for a in queryset[:30]
             ],
         }
 
@@ -345,6 +387,7 @@ def construire_outils(user):
         ca_previsionnel,
         montant_en_attente,
         affaires_a_risque,
+        lister_affaires,
         lister_devis,
         lister_documents,
         lister_factures,
@@ -393,8 +436,14 @@ TOOL_SCHEMAS = [
     ),
     _outil(
         'affaires_a_risque',
-        "Affaires en cours déjà en retard sur leur date de fin prévue ou dont l'échéance approche.",
+        "UNIQUEMENT les affaires déjà en retard ou dont l'échéance approche (pas la liste complète des affaires : pour cela utiliser lister_affaires).",
         {'horizon_jours': {'type': 'integer', 'description': 'Fenêtre en jours pour considérer une échéance comme proche (ex. 14).'}},
+    ),
+    _outil(
+        'lister_affaires',
+        "Liste toutes les affaires (comme la page Affaires) avec objet, client, chargé d'affaires, avancement, "
+        "budget, heures et échéance. À utiliser pour « quelles sont les affaires en cours », « liste des affaires », etc.",
+        {'etat': {'type': 'string', 'description': '"en_cours" (non terminées), "terminees", ou vide pour toutes.'}},
     ),
     _outil(
         'lister_devis',

@@ -3,6 +3,7 @@ import logging
 
 import groq
 from django.conf import settings
+from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -23,6 +24,8 @@ Règles impératives :
 élément commençant par un tiret.
 - Base-toi exclusivement sur les données renvoyées par les outils disponibles ; n'invente jamais de \
 chiffres, de noms de clients ou de numéros de devis.
+- Recopie les dates et les montants exactement comme les outils les renvoient (écris les dates au \
+format jj/mm/aaaa) ; ne corrige jamais une année de toi-même.
 - Si un outil renvoie une erreur (ex. permission refusée, client introuvable), explique-le clairement \
 à l'utilisateur au lieu d'essayer autre chose.
 - Pour toute action qui modifie les données (ex. créer un devis) : appelle d'abord l'outil \
@@ -103,7 +106,10 @@ class AssistantChatView(APIView):
 
         historique = request.data.get('historique') or []
         messages = [
-            {'role': 'system', 'content': SYSTEM_INSTRUCTION},
+            {
+                'role': 'system',
+                'content': f"{SYSTEM_INSTRUCTION}\n\nDate du jour : {timezone.localdate():%d/%m/%Y}.",
+            },
             *(
                 {
                     'role': 'user' if tour.get('role') == 'user' else 'assistant',
