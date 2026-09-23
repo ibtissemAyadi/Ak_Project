@@ -135,7 +135,9 @@ def construire_outils(user):
         }
 
     def lister_documents(categorie: str = '', recherche: str = '') -> dict:
-        """Liste les documents de la bibliothèque documentaire (fichiers importés).
+        """Liste la bibliothèque documentaire, comme la page Documents de
+        l'application : fichiers importés, plus les PDF de devis (catégorie
+        contract) et de factures (catégorie financial) générés à la volée.
 
         Args:
             categorie: Catégorie (vide = toutes) : contract, technical, financial, legal, report, other.
@@ -145,26 +147,63 @@ def construire_outils(user):
             return {'erreur': "Vous n'avez pas la permission de consulter les documents."}
 
         categories = dict(DOCUMENT_CATEGORIE_CHOICES)
-        queryset = Document.objects.all()
-        if categorie:
-            if categorie not in categories:
-                return {'erreur': f'Catégorie inconnue "{categorie}". Valeurs possibles : {", ".join(categories)}.'}
-            queryset = queryset.filter(categorie=categorie)
-        if recherche:
-            queryset = queryset.filter(designation__icontains=recherche)
+        if categorie and categorie not in categories:
+            return {'erreur': f'Catégorie inconnue "{categorie}". Valeurs possibles : {", ".join(categories)}.'}
 
-        total = queryset.count()
-        documents = list(queryset[:20])
+        # Vue combinée : les PDF de devis/factures ne sont jamais stockés dans
+        # Document (voir documents.models), on les reconstitue ici comme le fait
+        # le frontend (documents-service.ts). Chaque source n'est incluse que si
+        # l'utilisateur a aussi le droit de lecture sur son module d'origine.
+        entrees = [
+            {
+                'designation': d.designation,
+                'categorie': d.categorie,
+                'origine': 'fichier importé',
+                'lie_a': d.lie_a or None,
+                'date': d.date_creation,
+            }
+            for d in Document.objects.all()
+        ]
+        if utilisateur_a_permission(user, 'devis', 'lecture'):
+            entrees += [
+                {
+                    'designation': f'Devis {d.numero}',
+                    'categorie': 'contract',
+                    'origine': 'PDF de devis généré',
+                    'lie_a': d.client.raison_sociale,
+                    'date': d.date_creation,
+                }
+                for d in Devis.objects.filter(est_courante=True).select_related('client')
+            ]
+        if utilisateur_a_permission(user, 'factures', 'lecture'):
+            entrees += [
+                {
+                    'designation': f'Facture {f.numero_facture}',
+                    'categorie': 'financial',
+                    'origine': 'PDF de facture généré',
+                    'lie_a': f.affaire.client.raison_sociale,
+                    'date': f.date_creation,
+                }
+                for f in Facture.objects.select_related('affaire__client')
+            ]
+
+        if categorie:
+            entrees = [e for e in entrees if e['categorie'] == categorie]
+        if recherche:
+            entrees = [e for e in entrees if recherche.lower() in e['designation'].lower()]
+        entrees.sort(key=lambda e: e['date'], reverse=True)
+
         return {
-            'nombre_total': total,
+            'nombre_total': len(entrees),
             'documents': [
                 {
-                    'designation': d.designation,
-                    'categorie': categories.get(d.categorie, d.categorie),
-                    'lie_a': d.lie_a or None,
-                    'date_ajout': d.date_creation.date().isoformat(),
+                    'designation': e['designation'],
+                    'categorie': categories.get(e['categorie'], e['categorie']),
+                    'origine': e['origine'],
+                    'lie_a': e['lie_a'],
+                    'date_ajout': e['date'].date().isoformat(),
                 }
-                for d in documents
+                for e in entrees[:20]
             ],
         }
 
@@ -367,7 +406,7 @@ TOOL_SCHEMAS = [
     ),
     _outil(
         'lister_documents',
-        'Liste les documents de la bibliothèque documentaire (contrats, rapports, etc.), avec filtres optionnels.',
+        'Liste la bibliothèque documentaire comme la page Documents : fichiers importés ET PDF de devis et de factures générés, avec filtres optionnels.',
         {
             'categorie': {
                 'type': 'string',
