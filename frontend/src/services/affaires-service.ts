@@ -31,7 +31,6 @@ interface RawAffaire {
   budget: string | number
   heures_prevues: string | number
   heures_consommees: string | number
-  heures_restantes: string | number
   etat_avancement: number
   priorite: AffairePriorite
   date_debut: string | null
@@ -86,7 +85,6 @@ function mapAffaire(raw: RawAffaire): Affaire {
     budget: n(raw.budget),
     heuresPrevues: n(raw.heures_prevues),
     heuresConsommees: n(raw.heures_consommees),
-    heuresRestantes: n(raw.heures_restantes),
     etatAvancement: raw.etat_avancement,
     priorite: raw.priorite,
     dateDebut: raw.date_debut,

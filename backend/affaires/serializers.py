@@ -34,7 +34,6 @@ class PieceJointeAffaireSerializer(serializers.ModelSerializer):
 class AffaireListSerializer(serializers.ModelSerializer):
     client = ClientMiniSerializer(read_only=True)
     charge_affaires = UtilisateurMiniSerializer(read_only=True)
-    heures_restantes = serializers.SerializerMethodField()
     devis_numero = serializers.CharField(source='devis.numero', read_only=True)
     objet = serializers.CharField(source='devis.objet', read_only=True)
 
@@ -43,13 +42,10 @@ class AffaireListSerializer(serializers.ModelSerializer):
         fields = [
             'id_affaire', 'numero_affaire', 'devis', 'devis_numero', 'objet',
             'client', 'charge_affaires',
-            'budget', 'heures_prevues', 'heures_consommees', 'heures_restantes',
+            'budget', 'heures_prevues', 'heures_consommees',
             'etat_avancement', 'priorite',
             'date_debut', 'date_fin_prevue', 'date_fin_reelle', 'date_creation',
         ]
-
-    def get_heures_restantes(self, obj):
-        return str(obj.heures_restantes)
 
 
 class AffaireDetailSerializer(AffaireListSerializer):

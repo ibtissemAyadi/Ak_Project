@@ -44,15 +44,6 @@ export const affaireColumns: ColumnDef<Affaire, any>[] = [
     ),
   },
   {
-    accessorKey: 'heuresRestantes',
-    header: () => <div className="text-right">Heures restantes</div>,
-    cell: ({ row }) => (
-      <div className="text-right tabular-nums">
-        {formatNumber(row.original.heuresRestantes)} / {formatNumber(row.original.heuresPrevues)} h
-      </div>
-    ),
-  },
-  {
     accessorKey: 'budget',
     header: () => <div className="text-right">Budget</div>,
     cell: ({ row }) => (

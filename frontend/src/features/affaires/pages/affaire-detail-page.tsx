@@ -350,7 +350,10 @@ export function AffaireDetailPage() {
                 {affaire.etatAvancement}%
               </span>
             </div>
-            <div className="grid grid-cols-3 gap-4 pt-2 text-sm">
+            <p className="text-xs text-muted-foreground">
+              Estimation saisie par le chargé d'affaires — à mettre à jour manuellement.
+            </p>
+            <div className="grid grid-cols-2 gap-4 pt-2 text-sm">
               <div>
                 <p className="text-xs text-muted-foreground">Heures prévues</p>
                 <p className="font-medium tabular-nums text-foreground">{formatNumber(affaire.heuresPrevues)} h</p>
@@ -358,10 +361,6 @@ export function AffaireDetailPage() {
               <div>
                 <p className="text-xs text-muted-foreground">Heures consommées</p>
                 <p className="font-medium tabular-nums text-foreground">{formatNumber(affaire.heuresConsommees)} h</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Heures restantes</p>
-                <p className="font-medium tabular-nums text-foreground">{formatNumber(affaire.heuresRestantes)} h</p>
               </div>
             </div>
           </CardContent>
@@ -612,7 +611,7 @@ export function AffaireDetailPage() {
                   name="etatAvancement"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Avancement (%)</FormLabel>
+                      <FormLabel>Avancement estimé (%)</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -621,6 +620,7 @@ export function AffaireDetailPage() {
                           onChange={(e) => field.onChange(e.target.valueAsNumber)}
                         />
                       </FormControl>
+                      <p className="text-xs text-muted-foreground">Votre estimation, à ajuster au fil de l'affaire.</p>
                       <FormMessage />
                     </FormItem>
                   )}

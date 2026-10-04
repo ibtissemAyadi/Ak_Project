@@ -1,5 +1,4 @@
 import uuid
-from decimal import Decimal
 
 from django.conf import settings
 from django.db import models
@@ -71,10 +70,6 @@ class Affaire(models.Model):
         if not self.numero_affaire:
             self.numero_affaire = generer_numero_affaire(self.devis)
         super().save(*args, **kwargs)
-
-    @property
-    def heures_restantes(self) -> Decimal:
-        return self.heures_prevues - self.heures_consommees
 
     @classmethod
     def creer_depuis_devis(cls, devis):

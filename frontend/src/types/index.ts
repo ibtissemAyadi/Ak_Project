@@ -216,7 +216,6 @@ export interface Affaire {
   budget: number
   heuresPrevues: number
   heuresConsommees: number
-  heuresRestantes: number
   etatAvancement: number
   priorite: AffairePriorite
   dateDebut: string | null
