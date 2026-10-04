@@ -13,8 +13,11 @@ import {
 } from 'recharts'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { FilterSelect } from '@/components/shared/filter-select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import type { CaRealiseAnnee } from '@/services/devis-service'
+import { useAsync } from '@/hooks/use-async'
+import { devisService } from '@/services/devis-service'
+import type { DevisIntervenant } from '@/types'
 import { formatCurrency } from '@/lib/formatters'
 
 const MOIS_COURTS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
@@ -25,13 +28,22 @@ const MOIS_COURTS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', '
 const COULEURS = ['hsl(var(--chart-1))', 'hsl(var(--foreground))', 'hsl(var(--muted-foreground))']
 
 interface Props {
-  data: CaRealiseAnnee[]
+  intervenants: DevisIntervenant[]
 }
 
-export function CaRealiseChart({ data }: Props) {
+// Filtre "chargé d'affaires" géré ici, indépendamment du filtre global du
+// dashboard : on veut pouvoir comparer les courbes d'une personne sans
+// changer les KPI/autres graphiques affichés au-dessus.
+export function CaRealiseChart({ intervenants }: Props) {
   const [vue, setVue] = useState<'mensuel' | 'annuel'>('mensuel')
+  const [chargeAffaires, setChargeAffaires] = useState('all')
 
-  const annees = useMemo(() => [...data].sort((a, b) => a.annee - b.annee), [data])
+  const { data } = useAsync(
+    () => devisService.caRealise(3, chargeAffaires === 'all' ? undefined : chargeAffaires),
+    [chargeAffaires],
+  )
+
+  const annees = useMemo(() => [...(data ?? [])].sort((a, b) => a.annee - b.annee), [data])
 
   const dataMensuelle = useMemo(
     () =>
@@ -56,14 +68,24 @@ export function CaRealiseChart({ data }: Props) {
 
   return (
     <Card className="col-span-1 lg:col-span-3">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
         <CardTitle>Chiffre d'affaires réalisé (devis acceptés)</CardTitle>
-        <Tabs value={vue} onValueChange={(v) => setVue(v as 'mensuel' | 'annuel')}>
-          <TabsList>
-            <TabsTrigger value="mensuel">Mensuel (cumulé)</TabsTrigger>
-            <TabsTrigger value="annuel">Annuel</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex flex-wrap items-center gap-2">
+          <FilterSelect
+            label="Chargé d'affaires"
+            value={chargeAffaires}
+            onChange={setChargeAffaires}
+            options={intervenants.map((i) => ({ value: i.id, label: `${i.prenom} ${i.nom}` }))}
+            allLabel="Tous les chargés d'affaires"
+            className="h-9 w-[200px]"
+          />
+          <Tabs value={vue} onValueChange={(v) => setVue(v as 'mensuel' | 'annuel')}>
+            <TabsList>
+              <TabsTrigger value="mensuel">Mensuel (cumulé)</TabsTrigger>
+              <TabsTrigger value="annuel">Annuel</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </CardHeader>
       <CardContent className="h-80 pl-0">
         {annees.length === 0 || annees.every((a) => a.points.every((p) => p.cumulEur === 0)) ? (

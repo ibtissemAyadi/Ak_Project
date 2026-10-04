@@ -72,10 +72,6 @@ export function DashboardPage() {
   }, [periode, chargeAffaires])
 
   const { data, isLoading, error, refetch } = useAsync(() => dashboardService.getOverview(filters), [filters])
-  const { data: caRealise } = useAsync(
-    () => devisService.caRealise(3, filters.chargeAffairesId),
-    [filters.chargeAffairesId],
-  )
 
   return (
     <div className="space-y-6">
@@ -115,7 +111,7 @@ export function DashboardPage() {
             ))}
           </div>
 
-          {caRealise ? <CaRealiseChart data={caRealise} /> : null}
+          <CaRealiseChart intervenants={intervenants ?? []} />
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <QuotationsByStatusChart data={data.quotationsByStatus} />
