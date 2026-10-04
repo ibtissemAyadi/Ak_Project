@@ -18,6 +18,7 @@ import { ErrorState } from '@/components/shared/error-state'
 import { useAsync } from '@/hooks/use-async'
 import { dashboardService, type DashboardFilters } from '@/services/dashboard-service'
 import { devisService } from '@/services/devis-service'
+import { CaRealiseChart } from '@/features/dashboard/components/ca-realise-chart'
 import { RevenueChart } from '@/features/dashboard/components/revenue-chart'
 import { QuotationsByStatusChart } from '@/features/dashboard/components/quotations-by-status-chart'
 import {
@@ -72,6 +73,10 @@ export function DashboardPage() {
   }, [periode, chargeAffaires])
 
   const { data, isLoading, error, refetch } = useAsync(() => dashboardService.getOverview(filters), [filters])
+  const { data: caRealise } = useAsync(
+    () => devisService.caRealise(3, filters.chargeAffairesId),
+    [filters.chargeAffairesId],
+  )
 
   return (
     <div className="space-y-6">
@@ -110,6 +115,8 @@ export function DashboardPage() {
               <StatCard key={kpi.label} {...kpi} icon={KPI_ICON_BY_LABEL[kpi.label] ?? FileText} />
             ))}
           </div>
+
+          {caRealise ? <CaRealiseChart data={caRealise} /> : null}
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <RevenueChart data={data.revenue} />

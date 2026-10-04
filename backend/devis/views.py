@@ -35,6 +35,7 @@ from .serializers import (
     LigneDevisSerializer,
     UtilisateurMiniSerializer,
 )
+from .services import calculer_ca_realise
 
 
 class DevisFigeError(APIException):
@@ -322,3 +323,21 @@ class IntervenantsListView(generics.ListAPIView):
         return Utilisateur.objects.filter(
             role__libelle="Chargé d'affaires", statut='Actif',
         ).order_by('nom', 'prenom')
+
+
+class DevisCaRealiseView(APIView):
+    """GET /api/devis/ca-realise/?annees=3&charge_affaires=<id> — chiffre
+    d'affaires réalisé (devis acceptés), cumulé par mois, sur les `annees`
+    dernières années (pour le graphique de comparaison N / N-1 / N-2 du
+    tableau de bord). charge_affaires (optionnel) restreint aux devis de ce
+    chargé d'affaires — même filtre croisé que le reste du dashboard."""
+    permission_classes = [HasModulePermission]
+    permission_module = 'devis'
+
+    def get(self, request):
+        try:
+            nb_annees = int(request.query_params.get('annees', 3))
+        except (TypeError, ValueError):
+            nb_annees = 3
+        resultat = calculer_ca_realise(nb_annees, request.query_params.get('charge_affaires'))
+        return Response(resultat)

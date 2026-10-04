@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     CommentaireDevisListCreateView,
+    DevisCaRealiseView,
     DevisDetailView,
     DevisListCreateView,
     DevisNouvelleVersionView,
@@ -16,6 +17,7 @@ from .views import (
 
 urlpatterns = [
     path('intervenants/', IntervenantsListView.as_view(), name='devis-intervenants'),
+    path('ca-realise/', DevisCaRealiseView.as_view(), name='devis-ca-realise'),
 
     path('lignes/<uuid:pk>/', LigneDevisDetailView.as_view(), name='ligne-devis-detail'),
 

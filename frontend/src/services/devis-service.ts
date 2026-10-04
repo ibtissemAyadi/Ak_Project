@@ -37,6 +37,16 @@ interface RawLigne {
   montant: string | number
 }
 
+interface RawCaRealiseAnnee {
+  annee: number
+  points: { mois: number; cumul_eur: number | string }[]
+}
+
+export interface CaRealiseAnnee {
+  annee: number
+  points: { mois: number; cumulEur: number }[]
+}
+
 interface RawHistorique {
   id_historique: string
   ancien_statut: string
@@ -241,6 +251,17 @@ export const devisService = {
     apiFetch<RawUtilisateurMini[]>('/api/devis/intervenants/').then((rows) =>
       rows.map((r) => ({ id: r.id_utilisateur, nom: r.nom, prenom: r.prenom, coutHoraire: n(r.cout_horaire) })),
     ),
+
+  caRealise: (nbAnnees: number, chargeAffairesId?: string): Promise<CaRealiseAnnee[]> => {
+    const params = new URLSearchParams({ annees: String(nbAnnees) })
+    if (chargeAffairesId) params.set('charge_affaires', chargeAffairesId)
+    return apiFetch<RawCaRealiseAnnee[]>(`/api/devis/ca-realise/?${params}`).then((rows) =>
+      rows.map((r) => ({
+        annee: r.annee,
+        points: r.points.map((p) => ({ mois: p.mois, cumulEur: n(p.cumul_eur) })),
+      })),
+    )
+  },
 
   addLigne: (devisId: string, payload: LignePayload): Promise<DevisLigne> =>
     apiFetch<RawLigne>(`/api/devis/${devisId}/lignes/`, {
