@@ -19,7 +19,6 @@ import { useAsync } from '@/hooks/use-async'
 import { dashboardService, type DashboardFilters } from '@/services/dashboard-service'
 import { devisService } from '@/services/devis-service'
 import { CaRealiseChart } from '@/features/dashboard/components/ca-realise-chart'
-import { RevenueChart } from '@/features/dashboard/components/revenue-chart'
 import { QuotationsByStatusChart } from '@/features/dashboard/components/quotations-by-status-chart'
 import {
   LateInvoicesPanel,
@@ -119,7 +118,6 @@ export function DashboardPage() {
           {caRealise ? <CaRealiseChart data={caRealise} /> : null}
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <RevenueChart data={data.revenue} />
             <QuotationsByStatusChart data={data.quotationsByStatus} />
           </div>
 

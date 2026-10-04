@@ -552,11 +552,6 @@ export interface KpiSummary {
   trend?: 'up' | 'down' | 'flat'
 }
 
-export interface RevenuePoint {
-  month: string
-  revenue: number
-}
-
 export interface UpcomingDeadline {
   id: Id
   title: string

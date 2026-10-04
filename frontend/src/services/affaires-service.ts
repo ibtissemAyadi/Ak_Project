@@ -2,7 +2,7 @@ import { apiFetch, ApiHttpError } from '@/lib/api-http'
 import { API_BASE_URL } from '@/lib/constants'
 import { useAuthStore } from '@/store/auth-store'
 import { mapDevisDetail, type RawDevisDetail } from '@/services/devis-service'
-import type { Affaire, AffaireCommentaire, AffaireDetail, AffairePriorite, PieceJointeAffaire, RevenuePoint } from '@/types'
+import type { Affaire, AffaireCommentaire, AffaireDetail, AffairePriorite, PieceJointeAffaire } from '@/types'
 
 // ---------------------------------------------------------------------------
 // Raw (snake_case) shapes returned by Django — mirrors affaires/serializers.py
@@ -154,24 +154,8 @@ function toAffaireApiPayload(p: Partial<AffaireUpdatePayload>) {
   }
 }
 
-interface RawPrevisionRevenus {
-  mois: string // 'YYYY-MM'
-  montant_prevu: string | number
-}
-
-function mapPrevisionRevenus(raw: RawPrevisionRevenus): RevenuePoint {
-  const [annee, mois] = raw.mois.split('-').map(Number)
-  const label = new Intl.DateTimeFormat('fr-FR', { month: 'short', year: '2-digit' }).format(new Date(annee, mois - 1, 1))
-  return { month: label, revenue: n(raw.montant_prevu) }
-}
-
 export const affairesService = {
   list: (): Promise<Affaire[]> => apiFetch<RawAffaire[]>('/api/affaires/').then((rows) => rows.map(mapAffaire)),
-
-  previsionRevenus: (mois = 12, chargeAffairesId?: string): Promise<RevenuePoint[]> =>
-    apiFetch<RawPrevisionRevenus[]>(
-      `/api/affaires/prevision-revenus/?mois=${mois}${chargeAffairesId ? `&charge_affaires=${chargeAffairesId}` : ''}`,
-    ).then((rows) => rows.map(mapPrevisionRevenus)),
 
   montantEnAttente: (chargeAffairesId?: string): Promise<number> =>
     apiFetch<{ montant_en_attente: string | number }>(

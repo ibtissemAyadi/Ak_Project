@@ -6,9 +6,8 @@ import type { Affaire, DevisListItem, DevisStatut, Facture, KpiSummary, Upcoming
 
 export interface DashboardFilters {
   // Filtre "période" : ne s'applique qu'aux enregistrements créés dans cette
-  // fenêtre (date_creation) — affaires, devis, factures. Le CA prévisionnel
-  // (par nature tourné vers les prochains mois) et le montant en attente
-  // (état courant) ne sont pas concernés, seulement par chargeAffairesId.
+  // fenêtre (date_creation) — affaires, devis, factures. Le montant en
+  // attente (état courant) n'est pas concerné, seulement par chargeAffairesId.
   from?: string // 'YYYY-MM-DD'
   to?: string
   chargeAffairesId?: string
@@ -71,8 +70,7 @@ function echeancesFactures(factures: Facture[]): UpcomingDeadline[] {
 
 export const dashboardService = {
   getOverview: async (filters: DashboardFilters = {}) => {
-    const [revenue, montantEnAttente, facturesAll, affairesAll, devisAll, recentActivities] = await Promise.all([
-      affairesService.previsionRevenus(12, filters.chargeAffairesId),
+    const [montantEnAttente, facturesAll, affairesAll, devisAll, recentActivities] = await Promise.all([
       affairesService.montantEnAttente(filters.chargeAffairesId),
       facturesService.list(),
       affairesService.list(),
@@ -138,7 +136,6 @@ export const dashboardService = {
 
     return {
       kpis,
-      revenue,
       quotationsByStatus,
       lateInvoices: facturesEnRetard.slice(0, 6),
       upcomingDeadlines,
