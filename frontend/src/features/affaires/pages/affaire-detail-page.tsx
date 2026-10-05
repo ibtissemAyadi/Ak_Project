@@ -50,7 +50,7 @@ import { facturesService } from '@/services/factures-service'
 import { EcheanceFormFields } from '@/features/factures/components/echeance-form-fields'
 import { AFFAIRE_PRIORITE_META, DEVIS_STATUT_META, FACTURE_STATUT_META } from '@/lib/constants'
 import { formatCurrency, formatDate, formatNumber, formatRelativeTime } from '@/lib/formatters'
-import type { AffairePriorite, TypeEcheance } from '@/types'
+import type { AffairePriorite, FactureDetail, TypeEcheance } from '@/types'
 
 const editSchema = z.object({
   budget: z.number().min(0),
@@ -192,12 +192,44 @@ export function AffaireDetailPage() {
       }
       setFactureDialogOpen(false)
       toast.success('Facture créée avec succès.')
+      await envoyerFactureParMail(facture)
       navigate(`/factures/${facture.id}`)
     } catch (err) {
       toast.error(err instanceof ApiHttpError ? err.message : 'Impossible de créer la facture.')
     } finally {
       setFactureBusy(false)
     }
+  }
+
+  // Prépare l'envoi au client : télécharge le PDF (à joindre à la main, un
+  // mailto ne peut pas joindre de fichier) puis ouvre la messagerie par
+  // défaut de l'utilisateur avec destinataire/objet/message pré-remplis —
+  // l'envoi reste une action manuelle de l'utilisateur, jamais automatique.
+  const envoyerFactureParMail = async (facture: FactureDetail) => {
+    try {
+      await facturesService.downloadPdf(facture.id, `${facture.numeroFacture}.pdf`)
+    } catch {
+      toast.error("Le PDF n'a pas pu être téléchargé automatiquement. Téléchargez-le depuis la facture pour le joindre.")
+    }
+
+    if (!facture.client.email) {
+      toast.warning('Ce client n’a pas d’adresse e-mail enregistrée : impossible de pré-remplir le message.')
+      return
+    }
+
+    const objet = `Facture ${facture.numeroFacture} – A&K Conseil et Ingénierie`
+    const corps = [
+      `Bonjour,`,
+      '',
+      `Veuillez trouver ci-joint la facture ${facture.numeroFacture} d'un montant de ${formatCurrency(facture.montantAPayer)}, à régler avant le ${formatDate(facture.dateEcheance)}.`,
+      '',
+      "N'hésitez pas à nous contacter pour toute question.",
+      '',
+      'Cordialement,',
+    ].join('\n')
+    const lienMailto = `mailto:${encodeURIComponent(facture.client.email)}?subject=${encodeURIComponent(objet)}&body=${encodeURIComponent(corps)}`
+    window.open(lienMailto, '_blank')
+    toast.info("Le fichier PDF téléchargé doit être joint manuellement à l'e-mail.")
   }
 
   const prioriteMeta = AFFAIRE_PRIORITE_META[affaire.priorite]
