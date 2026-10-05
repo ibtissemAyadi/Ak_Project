@@ -35,10 +35,6 @@ STATUT_CHOICES = [
 # Statuts terminaux : plus aucune transition possible.
 STATUTS_TERMINAUX = {STATUT_ACCEPTE, STATUT_REFUSE, STATUT_ANNULE}
 
-# Statuts à partir desquels une modification de lignes/montants/intervenants
-# déclenche une nouvelle version plutôt qu'une édition en place.
-STATUTS_GELES_POUR_EDITION = {STATUT_ENVOYE, STATUT_ACCEPTE, STATUT_REFUSE, STATUT_ANNULE}
-
 TRANSITIONS_AUTORISEES = {
     STATUT_BROUILLON: {STATUT_EN_PREPARATION, STATUT_ANNULE},
     STATUT_EN_PREPARATION: {STATUT_A_VALIDER, STATUT_ANNULE},
@@ -218,12 +214,12 @@ class Devis(models.Model):
             )
 
     def necessite_nouvelle_version(self):
-        """Une fois le devis Envoyé (ou au-delà), toute modification
-        significative (lignes, montants, intervenants) doit passer par une
-        nouvelle version plutôt que d'écraser celle-ci. Ne s'applique qu'à la
-        version courante (verifier_editable() couvre le cas d'une version
-        déjà remplacée)."""
-        return self.statut in STATUTS_GELES_POUR_EDITION
+        """Toute modification (lignes, montants, intervenants), quel que soit
+        le statut de départ, doit passer par une nouvelle version plutôt que
+        d'écraser celle-ci — l'historique complet de chaque édition est ainsi
+        conservé (v1, v2, v3...). Ne s'applique qu'à la version courante
+        (verifier_editable() couvre le cas d'une version déjà remplacée)."""
+        return True
 
     def creer_nouvelle_version(self):
         """Duplique l'en-tête (statut remis à Brouillon, nouvelle version,

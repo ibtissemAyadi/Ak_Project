@@ -253,10 +253,14 @@ class LigneDevisListCreateView(generics.ListCreateAPIView):
 class LigneDevisDetailView(generics.RetrieveUpdateDestroyAPIView):
     """PATCH/DELETE /api/devis/lignes/<ligne_id>/
 
-    Refuse (409) toute modification/suppression si le devis parent est figé :
-    une ligne d'une version figée ne peut pas être éditée après coup — il
-    faut créer une nouvelle version (POST .../nouvelle-version/) puis modifier
-    la ligne équivalente sur celle-ci."""
+    Chaque devis versionnant à la moindre modification (voir
+    Devis.necessite_nouvelle_version(), toujours vrai), modifier ou
+    supprimer une ligne existante crée d'abord une nouvelle version du devis
+    parent, puis applique le changement sur la ligne équivalente de cette
+    nouvelle version — retrouvée par position (même ordre de création que
+    l'originale parmi les lignes du devis, l'ordre dans lequel
+    Devis.creer_nouvelle_version() les duplique). La réponse renvoie donc
+    éventuellement un `devis` différent de celui attendu par l'appelant."""
     permission_classes = [HasModulePermission]
     permission_module = 'devis'
     serializer_class = LigneDevisSerializer
@@ -264,20 +268,28 @@ class LigneDevisDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'id_ligne'
     lookup_url_kwarg = 'pk'
 
-    def _bloquer_si_fige(self, instance):
-        if instance.devis.necessite_nouvelle_version():
-            raise DevisFigeError(
-                "Ce devis est figé (statut '%s') : créez d'abord une nouvelle version pour modifier une ligne existante."
-                % instance.devis.statut,
-            )
+    def _ligne_dans_version_courante(self, ligne):
+        devis = ligne.devis
+        if not devis.necessite_nouvelle_version():
+            return ligne
+        anciennes = list(devis.lignes.all())
+        index = anciennes.index(ligne)
+        nouveau_devis = _creer_nouvelle_version_ou_409(devis)
+        nouvelles = list(nouveau_devis.lignes.all())
+        return nouvelles[index]
 
     def update(self, request, *args, **kwargs):
-        self._bloquer_si_fige(self.get_object())
-        return super().update(request, *args, **kwargs)
+        instance = self._ligne_dans_version_courante(self.get_object())
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()  # déclenche recalculer_montants() via le signal post_save
+        return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        self._bloquer_si_fige(self.get_object())
-        return super().destroy(request, *args, **kwargs)
+        instance = self._ligne_dans_version_courante(self.get_object())
+        devis_id = instance.devis.id_devis
+        instance.delete()  # déclenche recalculer_montants() via le signal post_delete
+        return Response({'devis': str(devis_id)}, status=status.HTTP_200_OK)
 
 
 class CommentaireDevisListCreateView(generics.ListCreateAPIView):

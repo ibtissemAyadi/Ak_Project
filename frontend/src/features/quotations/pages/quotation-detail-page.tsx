@@ -188,8 +188,8 @@ export function QuotationDetailPage() {
 
   const removeLigne = async (ligneId: string) => {
     try {
-      await devisService.removeLigne(ligneId)
-      refetch()
+      const { devis: devisId } = await devisService.removeLigne(ligneId)
+      if (!handleNewVersionRedirect(devisId)) refetch()
     } catch (err) {
       toast.error(err instanceof ApiHttpError ? err.message : 'Impossible de supprimer la ligne.')
     }

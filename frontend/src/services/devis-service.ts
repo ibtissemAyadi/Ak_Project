@@ -274,8 +274,12 @@ export const devisService = {
       }),
     }).then(mapLigne),
 
-  removeLigne: (ligneId: string): Promise<void> =>
-    apiFetch<void>(`/api/devis/lignes/${ligneId}/`, { method: 'DELETE' }),
+  // Supprimer une ligne verse toujours le devis parent vers une nouvelle
+  // version (voir Devis.necessite_nouvelle_version()) : le `devis` renvoyé
+  // ici peut donc différer de celui attendu par l'appelant — à l'appelant
+  // de rediriger si besoin (voir handleNewVersionRedirect côté page).
+  removeLigne: (ligneId: string): Promise<{ devis: string }> =>
+    apiFetch<{ devis: string }>(`/api/devis/lignes/${ligneId}/`, { method: 'DELETE' }),
 
   addCommentaire: (devisId: string, texte: string): Promise<DevisCommentaire> =>
     apiFetch<RawCommentaire>(`/api/devis/${devisId}/commentaires/`, {
