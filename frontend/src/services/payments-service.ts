@@ -3,7 +3,7 @@ import { activitesService } from '@/services/activites-service'
 import { facturesService } from '@/services/factures-service'
 import { MOCK_PAYMENT_REMINDERS } from '@/mocks/data/payments'
 import { withLatency } from '@/lib/api-client'
-import type { Facture, Payment } from '@/types'
+import type { Facture, FactureStatut, Payment } from '@/types'
 
 // Il n'existe pas de module Paiements côté backend (pas de suivi ligne par
 // ligne des règlements) : un « paiement » ici est simplement une facture,
@@ -54,4 +54,10 @@ export const paymentsService = {
   // Les relances automatiques (email/SMS avant échéance) n'ont pas
   // d'équivalent backend (aucun envoi réel n'est déclenché) : reste simulé.
   listReminders: () => withLatency(() => [...MOCK_PAYMENT_REMINDERS]),
+
+  // Changement manuel du statut (ex. marquer une facture comme payée) :
+  // un paiement n'étant qu'une facture vue sous un autre angle, on écrit
+  // directement le statut de la facture sous-jacente.
+  updateStatus: (id: string, statut: FactureStatut): Promise<Payment> =>
+    facturesService.update(id, { statut }).then(facturePaiement),
 }
