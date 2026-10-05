@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { useAsync } from '@/hooks/use-async'
 import { paymentsService } from '@/services/payments-service'
 import { paymentColumns } from '@/features/payments/components/payment-columns'
-import { FACTURE_STATUT_META } from '@/lib/constants'
+import { PAIEMENT_STATUT_META } from '@/lib/constants'
 
 export function PaymentsListPage() {
   const navigate = useNavigate()
@@ -49,7 +49,7 @@ export function PaymentsListPage() {
             label="Statut"
             value={statusFilter}
             onChange={setStatusFilter}
-            options={Object.entries(FACTURE_STATUT_META).map(([value, meta]) => ({ value, label: meta.label }))}
+            options={Object.entries(PAIEMENT_STATUT_META).map(([value, meta]) => ({ value, label: meta.label }))}
           />
         }
       />

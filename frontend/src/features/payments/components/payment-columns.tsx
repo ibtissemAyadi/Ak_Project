@@ -5,7 +5,7 @@ import { BellRing, CreditCard } from 'lucide-react'
 import type { Payment } from '@/types'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { Button } from '@/components/ui/button'
-import { FACTURE_STATUT_META, MODE_REGLEMENT_LABELS } from '@/lib/constants'
+import { MODE_REGLEMENT_LABELS, PAIEMENT_STATUT_META } from '@/lib/constants'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
@@ -62,7 +62,7 @@ export const paymentColumns: ColumnDef<Payment, any>[] = [
   {
     accessorKey: 'status',
     header: 'Statut',
-    cell: ({ row }) => <StatusBadge status={row.original.status} meta={FACTURE_STATUT_META} />,
+    cell: ({ row }) => <StatusBadge status={row.original.status} meta={PAIEMENT_STATUT_META} />,
   },
   {
     accessorKey: 'amount',

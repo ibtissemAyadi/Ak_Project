@@ -23,7 +23,7 @@ import { hasPermission } from '@/lib/permissions'
 import { ApiHttpError } from '@/lib/api-http'
 import { paymentsService } from '@/services/payments-service'
 import { estEnRetard, ouvrirRelanceGmail } from '@/features/payments/components/payment-columns'
-import { FACTURE_STATUT_META, MODE_REGLEMENT_LABELS } from '@/lib/constants'
+import { MODE_REGLEMENT_LABELS, PAIEMENT_STATUT_META } from '@/lib/constants'
 import { formatCurrency, formatDateTime } from '@/lib/formatters'
 import type { FactureStatut } from '@/types'
 
@@ -46,7 +46,7 @@ export function PaymentDetailPage() {
     setStatusBusy(true)
     try {
       await paymentsService.updateStatus(payment.id, statut)
-      toast.success(`Statut mis à jour : ${FACTURE_STATUT_META[statut]?.label ?? statut}.`)
+      toast.success(`Statut mis à jour : ${PAIEMENT_STATUT_META[statut]?.label ?? statut}.`)
       refetch()
     } catch (err) {
       toast.error(err instanceof ApiHttpError ? err.message : 'Impossible de mettre à jour le statut.')
@@ -81,7 +81,7 @@ export function PaymentDetailPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(FACTURE_STATUT_META).map(([value, meta]) => (
+                  {Object.entries(PAIEMENT_STATUT_META).map(([value, meta]) => (
                     <SelectItem key={value} value={value}>
                       {meta.label}
                     </SelectItem>
@@ -89,7 +89,7 @@ export function PaymentDetailPage() {
                 </SelectContent>
               </Select>
             ) : (
-              <StatusBadge status={payment.status} meta={FACTURE_STATUT_META} />
+              <StatusBadge status={payment.status} meta={PAIEMENT_STATUT_META} />
             )}
           </div>
         }

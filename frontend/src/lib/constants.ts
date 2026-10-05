@@ -45,6 +45,16 @@ export const FACTURE_STATUT_META: Record<string, { label: string; variant: 'defa
   Annulee: { label: 'Annulée', variant: 'secondary' },
 }
 
+// Mêmes statuts que FACTURE_STATUT_META (même valeurs réelles côté facture),
+// mais relabellés du point de vue de l'argent dû plutôt que du cycle de vie
+// du document : "Envoyee" (la facture a été émise, aucun règlement reçu)
+// s'affiche "Non payée" dans le module Paiements, où ce vocabulaire est plus
+// clair que "Envoyée" à côté de "Payée"/"Partiellement payée".
+export const PAIEMENT_STATUT_META: Record<string, { label: string; variant: 'default' | 'secondary' | 'success' | 'warning' | 'destructive' | 'info' | 'muted' }> = {
+  ...FACTURE_STATUT_META,
+  Envoyee: { label: 'Non payée', variant: 'info' },
+}
+
 export const MODE_REGLEMENT_LABELS: Record<string, string> = {
   virement: 'Virement bancaire',
   cheque: 'Chèque',
