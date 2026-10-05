@@ -31,8 +31,10 @@ from devis.pdf_theme import (
     COMPANY_VAT_ID,
     COULEUR_BORDURE,
     COULEUR_FOND_ALT,
+    COULEUR_FOND_PAGE,
     COULEUR_FOND_TOTAL,
     COULEUR_PRINCIPALE,
+    COULEUR_SECONDAIRE,
     COULEUR_TEXTE_ATTENUE,
     FONT_BOLD,
     FONT_REGULAR,
@@ -182,8 +184,10 @@ def _tableau_totaux(facture):
         if accent:
             style_cmds.append(('LINEABOVE', (0, i), (-1, i), 0.75, COULEUR_BORDURE))
 
-    data[-1][0] = Paragraph('<b>Total</b>', ParagraphStyle('totL', parent=style_bold, fontSize=11.5))
-    data[-1][1] = Paragraph(f'<b>{lignes[-1][1]}</b>', ParagraphStyle('totV', parent=style_droite, fontSize=11.5))
+    # Montant final à payer : bleu marine, Bold — l'élément "premium" de la
+    # charte, pas une simple ligne en gras.
+    data[-1][0] = Paragraph('Total', ParagraphStyle('totL', parent=style_bold, fontName=FONT_BOLD, fontSize=11.5, textColor=COULEUR_PRINCIPALE))
+    data[-1][1] = Paragraph(lignes[-1][1], ParagraphStyle('totV', parent=style_droite, fontName=FONT_BOLD, fontSize=11.5, textColor=COULEUR_PRINCIPALE))
     style_cmds.append(('BACKGROUND', (0, len(lignes) - 1), (-1, len(lignes) - 1), COULEUR_FOND_TOTAL))
     style_cmds.append(('TOPPADDING', (0, len(lignes) - 1), (-1, len(lignes) - 1), 5))
     style_cmds.append(('BOTTOMPADDING', (0, len(lignes) - 1), (-1, len(lignes) - 1), 5))
@@ -247,6 +251,11 @@ def _bloc_signature(facture):
 def _pied_de_page():
     def dessiner(canvas, doc):
         canvas.saveState()
+        # Fond de page blanc cassé (charte) plutôt que le blanc pur par défaut
+        # de reportlab — posé en premier, sous tout le reste.
+        canvas.setFillColor(COULEUR_FOND_PAGE)
+        canvas.rect(0, 0, A4[0], A4[1], fill=1, stroke=0)
+
         canvas.setStrokeColor(COULEUR_BORDURE)
         canvas.line(2 * cm, 1.7 * cm, A4[0] - 2 * cm, 1.7 * cm)
         canvas.setFont(FONT_BOLD, 8)
@@ -262,9 +271,12 @@ def _pied_de_page():
 
 def generer_facture_pdf(facture) -> bytes:
     tampon = io.BytesIO()
+    # Marges de la charte (18-22mm côtés, 15-20mm haut/bas) — un peu plus
+    # serrées que le devis en haut/bas pour que la facture, signature
+    # comprise, continue de tenir sur une seule page.
     marge_horizontale = 2 * cm
-    marge_haute = 1.3 * cm
-    marge_basse = 1.9 * cm
+    marge_haute = 1.6 * cm
+    marge_basse = 1.7 * cm
     doc = SimpleDocTemplate(
         tampon, pagesize=A4,
         topMargin=marge_haute, bottomMargin=marge_basse, leftMargin=marge_horizontale, rightMargin=marge_horizontale,
@@ -274,11 +286,11 @@ def generer_facture_pdf(facture) -> bytes:
     elements = [
         _en_tete(),
         Spacer(1, 0.2 * cm),
-        HRFlowable(width='100%', thickness=1, color=COULEUR_PRINCIPALE),
+        HRFlowable(width='100%', thickness=0.75, color=COULEUR_SECONDAIRE),
         Spacer(1, 0.2 * cm),
         _bloc_entreprise_facture(facture),
         Spacer(1, 0.2 * cm),
-        HRFlowable(width='100%', thickness=1, color=COULEUR_PRINCIPALE),
+        HRFlowable(width='100%', thickness=0.75, color=COULEUR_SECONDAIRE),
         Spacer(1, 0.2 * cm),
         *_bloc_client(facture),
         Spacer(1, 0.3 * cm),

@@ -40,8 +40,10 @@ from .pdf_theme import (
     COMPANY_PHONE,
     COULEUR_BORDURE,
     COULEUR_FOND_ALT,
+    COULEUR_FOND_PAGE,
     COULEUR_FOND_TOTAL,
     COULEUR_PRINCIPALE,
+    COULEUR_SECONDAIRE,
     COULEUR_TEXTE_ATTENUE,
     FONT_BOLD,
     FONT_REGULAR,
@@ -222,9 +224,10 @@ def _tableau_totaux(devis):
         if accent:
             style_cmds.append(('LINEABOVE', (0, i), (-1, i), 0.75, COULEUR_BORDURE))
 
-    # Total TTC mis en évidence (montant final à payer)
-    data[-1][0] = Paragraph('<b>Total TTC</b>', ParagraphStyle('totL', parent=style_bold, fontSize=11.5))
-    data[-1][1] = Paragraph(f'<b>{lignes[-1][1]}</b>', ParagraphStyle('totV', parent=style_droite, fontSize=11.5))
+    # Total TTC mis en évidence (montant final à payer) — bleu marine, Bold :
+    # c'est l'élément "premium" de la charte, pas une simple ligne en gras.
+    data[-1][0] = Paragraph('Total TTC', ParagraphStyle('totL', parent=style_bold, fontName=FONT_BOLD, fontSize=12, textColor=COULEUR_PRINCIPALE))
+    data[-1][1] = Paragraph(lignes[-1][1], ParagraphStyle('totV', parent=style_droite, fontName=FONT_BOLD, fontSize=12, textColor=COULEUR_PRINCIPALE))
     style_cmds.append(('BACKGROUND', (0, len(lignes) - 1), (-1, len(lignes) - 1), COULEUR_FOND_TOTAL))
     style_cmds.append(('TOPPADDING', (0, len(lignes) - 1), (-1, len(lignes) - 1), 8))
     style_cmds.append(('BOTTOMPADDING', (0, len(lignes) - 1), (-1, len(lignes) - 1), 8))
@@ -366,6 +369,11 @@ def _page_cgv(devis):
 def _pied_de_page(devis):
     def dessiner(canvas, doc):
         canvas.saveState()
+        # Fond de page blanc cassé (charte) plutôt que le blanc pur par défaut
+        # de reportlab — posé en premier, sous tout le reste.
+        canvas.setFillColor(COULEUR_FOND_PAGE)
+        canvas.rect(0, 0, A4[0], A4[1], fill=1, stroke=0)
+
         canvas.setStrokeColor(COULEUR_BORDURE)
         canvas.line(2 * cm, 1.7 * cm, A4[0] - 2 * cm, 1.7 * cm)
         canvas.setFont(FONT_BOLD, 8)
@@ -383,18 +391,19 @@ def generer_devis_pdf(devis) -> bytes:
     tampon = io.BytesIO()
     doc = SimpleDocTemplate(
         tampon, pagesize=A4,
-        topMargin=2 * cm, bottomMargin=2.4 * cm, leftMargin=2 * cm, rightMargin=2 * cm,
+        # Marges "aérées" de la charte : 20mm de chaque côté.
+        topMargin=2 * cm, bottomMargin=2 * cm, leftMargin=2 * cm, rightMargin=2 * cm,
         title=f'Devis {devis.numero} v{devis.version}',
     )
 
     elements = [
         _en_tete(devis),
         Spacer(1, 0.4 * cm),
-        HRFlowable(width='100%', thickness=1, color=COULEUR_PRINCIPALE),
+        HRFlowable(width='100%', thickness=0.75, color=COULEUR_SECONDAIRE),
         Spacer(1, 0.4 * cm),
         _bloc_contact_devis(devis),
         Spacer(1, 0.4 * cm),
-        HRFlowable(width='100%', thickness=1, color=COULEUR_PRINCIPALE),
+        HRFlowable(width='100%', thickness=0.75, color=COULEUR_SECONDAIRE),
         Spacer(1, 0.4 * cm),
         *_bloc_client(devis),
         Spacer(1, 0.6 * cm),
