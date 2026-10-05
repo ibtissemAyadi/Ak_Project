@@ -24,6 +24,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
+from devis.cgv import elements_cgv
 from devis.pdf_theme import (
     COMPANY_ADDRESS,
     COMPANY_EMAIL,
@@ -315,6 +316,11 @@ def generer_facture_pdf(facture) -> bytes:
     # doit tenir sur une seule page, signature comprise.
     if facture.signature:
         elements += [Spacer(1, 0.35 * cm), KeepTogether(_bloc_signature(facture))]
+
+    # CGV annexées, comme sur le devis dont la facture découle (même texte,
+    # voir devis/cgv.py) — sur une ou plusieurs pages après la facture elle-
+    # même, qui reste par ailleurs tenue à une seule page.
+    elements += elements_cgv(_en_tete())
 
     pied = _pied_de_page()
     doc.build(elements, onFirstPage=pied, onLaterPages=pied)
