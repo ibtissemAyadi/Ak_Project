@@ -218,9 +218,17 @@ class Facture(models.Model):
         départ de la facture (modifiables ensuite indépendamment). La
         modalité de paiement est choisie par l'utilisateur avant la
         création (voir FactureCreateSerializer) — jamais de valeur par
-        défaut silencieuse."""
+        défaut silencieuse.
+
+        Statut initial Envoyee (pas le Brouillon par défaut du modèle) : le
+        bouton "Créer la facture" du module Affaires n'a pas d'étape de
+        brouillon à part, la facture est donc immédiatement considérée comme
+        émise — ce qui la fait apparaître aussitôt dans le module Paiements
+        (payments-service.ts exclut justement les factures Brouillon, en
+        attendant qu'elles soient réellement parties au client)."""
         facture = cls.objects.create(
             affaire=affaire,
+            statut=STATUT_ENVOYEE,
             type_echeance=type_echeance,
             nombre_jours=nombre_jours,
             jour_fixe_mois_suivant=jour_fixe_mois_suivant,
