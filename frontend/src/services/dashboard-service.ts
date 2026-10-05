@@ -2,7 +2,7 @@ import { activitesService } from '@/services/activites-service'
 import { affairesService } from '@/services/affaires-service'
 import { devisService } from '@/services/devis-service'
 import { facturesService } from '@/services/factures-service'
-import type { Affaire, DevisListItem, DevisStatut, Facture, KpiSummary, UpcomingDeadline } from '@/types'
+import type { Affaire, DevisListItem, Facture, KpiSummary, UpcomingDeadline } from '@/types'
 
 export interface DashboardFilters {
   // Filtre "période" : ne s'applique qu'aux enregistrements créés dans cette
@@ -12,8 +12,6 @@ export interface DashboardFilters {
   to?: string
   chargeAffairesId?: string
 }
-
-const DEVIS_STATUTS: DevisStatut[] = ['Brouillon', 'En_preparation', 'A_valider', 'Envoye', 'Accepte', 'Refuse', 'Annule']
 
 function today() {
   return new Date().toISOString().slice(0, 10)
@@ -117,11 +115,6 @@ export const dashboardService = {
       { label: 'Factures en retard', value: facturesEnRetard.length, format: 'number' },
     ]
 
-    const quotationsByStatus = DEVIS_STATUTS.map((statut) => ({
-      status: statut,
-      count: devis.filter((d) => d.statut === statut).length,
-    }))
-
     const upcomingDeadlines = [...echeancesAffaires(affaires), ...echeancesDevis(devis), ...echeancesFactures(factures)]
       .sort((a, b) => (a.dueDate > b.dueDate ? 1 : a.dueDate < b.dueDate ? -1 : 0))
       .slice(0, 8)
@@ -136,7 +129,6 @@ export const dashboardService = {
 
     return {
       kpis,
-      quotationsByStatus,
       lateInvoices: facturesEnRetard.slice(0, 6),
       upcomingDeadlines,
       projectsInProgress,
